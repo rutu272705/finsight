@@ -1,0 +1,5 @@
+# Better NLP quality (large downloads). Install with:  pip install -r requirements-optional.txt
+transformers>=4.40
+torch>=2.2
+spacy>=3.7
+# After installing spaCy, also run:  python -m spacy download en_core_web_sm
