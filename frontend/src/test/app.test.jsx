@@ -146,6 +146,13 @@ describe("Components", () => {
     expect(screen.getByText(/headline only/i)).toBeInTheDocument();
   });
 
+  it("shows sentiment confidence and identifies it as uncalibrated", async () => {
+    render(<ArticleCard article={article()} />);
+    expect(screen.getByLabelText(/80% sentiment confidence, uncalibrated/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /why this label/i }));
+    expect(screen.getByText(/not probabilities calibrated against observed outcomes/i)).toBeInTheDocument();
+  });
+
   it("prediction card warns when the model is no better than baseline", () => {
     render(<MemoryRouter><PredictionCard prediction={dashboard().prediction} symbol="AAPL" /></MemoryRouter>);
     expect(screen.getByText(/no more accurate than always guessing/i)).toBeInTheDocument();

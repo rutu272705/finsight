@@ -93,7 +93,7 @@ class LexiconAnalyzer:
 
 class FinBertAnalyzer:
     name = "finbert"
-    calibrated = True
+    calibrated = False
 
     def __init__(self) -> None:
         from transformers import AutoModelForSequenceClassification, AutoTokenizer  # noqa: WPS433
@@ -128,7 +128,7 @@ class FinBertAnalyzer:
                 variants = [re.sub(re.escape(s["term"].replace("not ", "")), "", text, flags=re.I) for s in top]
                 for s, p in zip(top, self._probs(variants)):
                     s["delta"] = round(probs[label] - p[label], 3)
-            results.append(_result(probs, self.name, top, calibrated=True))
+            results.append(_result(probs, self.name, top, calibrated=self.calibrated))
         return results
 
     def analyze(self, title: str, description: str = "") -> dict:

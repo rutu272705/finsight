@@ -23,6 +23,7 @@ export default function ArticleCard({ article, compact = false, defaultOpen = fa
   const s = article.sentiment;
   const ex = article.explanation || {};
   const p = s.probabilities;
+  const confidence = Number.isFinite(s.confidence) ? s.confidence : Math.max(...Object.values(p));
   const topicKicker = article.entities?.topics?.[0] || article.source || "Market Coverage";
 
   return (
@@ -40,6 +41,13 @@ export default function ArticleCard({ article, compact = false, defaultOpen = fa
           <span className="ml-auto flex items-center gap-2">
             <ProbBar p={p} />
             <SentimentBadge label={s.label} />
+            <span
+              className="text-[10px] font-semibold text-stone-600"
+              title={s.calibrated === false ? "Uncalibrated model score; not a guarantee" : "Model confidence"}
+              aria-label={`${(confidence * 100).toFixed(0)}% sentiment confidence${s.calibrated === false ? ", uncalibrated" : ""}`}
+            >
+              {(confidence * 100).toFixed(0)}% confidence
+            </span>
           </span>
         </div>
 
@@ -86,7 +94,7 @@ export default function ArticleCard({ article, compact = false, defaultOpen = fa
                 <p className="text-stone-600 font-serif">
                   Class probabilities: positive {(p.positive * 100).toFixed(0)}%, neutral {(p.neutral * 100).toFixed(0)}%, negative {(p.negative * 100).toFixed(0)}%
                   {" "}· score <strong>{signed(s.score)}</strong> · model: {s.backend}
-                  {s.calibrated === false && " (heuristic scores, not calibrated probabilities)"}
+                  {s.calibrated === false && " (uncalibrated scores, not probabilities calibrated against observed outcomes)"}
                 </p>
                 {ex.signals?.length > 0 ? (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 font-sans">

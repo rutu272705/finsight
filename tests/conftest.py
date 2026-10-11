@@ -25,6 +25,7 @@ def cfg(tmp_path, monkeypatch):
     monkeypatch.setenv("DEMO_MODE", "true")
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "test.db"))
     monkeypatch.setenv("NEWSAPI_KEY", "")
+    monkeypatch.setenv("SENTIMENT_BACKEND", "lexicon")
     c = get_config()
     c.MODEL_DIR = str(tmp_path / "models")
     return c

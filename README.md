@@ -89,7 +89,7 @@ All settings are environment variables (see `.env.example`). Secrets stay on the
 |---|---|---|
 | `NEWSAPI_KEY` | empty | NewsAPI key. Optional: without it, Google News and Yahoo feeds are used |
 | `NEWS_PROVIDERS` | `newsapi,googlenews,yahoo` | Providers tried in order; failures fall through to the next |
-| `SENTIMENT_BACKEND` | `lexicon` | `lexicon` or `finbert` |
+| `SENTIMENT_BACKEND` | `finbert` | `finbert` or `lexicon` |
 | `SUMMARIZER_BACKEND` | `extractive` | `extractive` or `transformers` |
 | `ENTITY_BACKEND` | `auto` | `auto` (spaCy if installed) or `regex` |
 | `FORECAST_HORIZON` | `5` | Trading sessions ahead |
@@ -108,13 +108,15 @@ All settings are environment variables (see `.env.example`). Secrets stay on the
 The free plan allows 100 requests/day and articles up to roughly a month old. FinSight caches results for 5 minutes, throttles
 manual refreshes to one per minute per company, and reports rate-limit errors in the UI. It works without a key.
 
-## Optional: FinBERT and spaCy
-The default lexicon scorer needs no downloads but is less accurate than a neural model.
+## FinBERT and optional NLP models
+FinBERT is the default finance-specific sentiment classifier. Install the optional dependencies to enable it; the model
+(about 440 MB) downloads on the first analysis. Until it is installed or if it cannot load, FinSight falls back to the
+built-in financial lexicon and reports the active backend. Its confidence is a model score, not a calibrated probability.
 ```bash
 pip install -r requirements-optional.txt
 python -m spacy download en_core_web_sm
 # in .env
-SENTIMENT_BACKEND=finbert            # ProsusAI/finbert, ~440 MB downloaded on first use
+SENTIMENT_BACKEND=finbert            # default; set lexicon for a lightweight offline alternative
 SUMMARIZER_BACKEND=transformers      # optional abstractive summaries
 ```
 If a model cannot load, FinSight logs the reason, falls back to the lexicon/extractive method, and the article card shows which

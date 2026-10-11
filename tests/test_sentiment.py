@@ -1,6 +1,6 @@
 import pytest
 
-from backend.nlp.sentiment import LexiconAnalyzer, get_analyzer, lexicon_signals
+from backend.nlp.sentiment import FinBertAnalyzer, LexiconAnalyzer, get_analyzer, lexicon_signals
 
 
 @pytest.fixture(scope="module")
@@ -50,8 +50,22 @@ def test_explanation_lists_signals_without_causal_claim(analyzer):
     assert r["signals"] and all("polarity" in s and "weight" in s for s in r["signals"])
 
 
-def test_finbert_request_falls_back_when_unavailable():
-    a = get_analyzer("finbert")  # transformers is not installed in CI
+def test_finbert_request_falls_back_when_unavailable(monkeypatch):
+    def fail_init(self):
+        raise ImportError("FinBERT weights unavailable in test")
+
+    monkeypatch.setattr(FinBertAnalyzer, "__init__", fail_init)
+    a = get_analyzer("finbert")
     r = a.analyze("Profit surges")
     assert r["label"] == "positive"
     assert "lexicon" in r["backend"]
+
+
+def test_finbert_scores_are_marked_uncalibrated(monkeypatch):
+    analyzer = object.__new__(FinBertAnalyzer)
+    monkeypatch.setattr(analyzer, "_probs", lambda texts: [
+        {"positive": 0.8, "negative": 0.1, "neutral": 0.1} for _ in texts
+    ])
+    result = analyzer.analyze("Revenue beats estimates")
+    assert result["confidence"] == 0.8
+    assert result["calibrated"] is False

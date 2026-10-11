@@ -5,7 +5,7 @@ export const history = Array.from({ length: 30 }, (_, i) => ({
 export const article = (over = {}) => ({
   id: 1, title: "Apple beats earnings estimates", source: "Reuters", url: "https://example.com/a", published_at: "2026-10-09T10:00:00+00:00",
   summary: "Apple beats earnings estimates. Revenue rose 8%.", relevance: 1,
-  sentiment: { label: "positive", probabilities: { positive: 0.8, negative: 0.05, neutral: 0.15 }, score: 0.75, backend: "lexicon", calibrated: false },
+  sentiment: { label: "positive", probabilities: { positive: 0.8, negative: 0.05, neutral: 0.15 }, confidence: 0.8, score: 0.75, backend: "lexicon", calibrated: false },
   entities: { companies: ["Apple"], people: [], tickers: [], money: [], percentages: [{ text: "8%", context: "revenue" }], topics: ["Earnings"] },
   explanation: { signals: [{ term: "beats", polarity: "positive", weight: 2 }], note: "Associative, not causal.", summary_basis: "headline_and_snippet" },
   ...over,

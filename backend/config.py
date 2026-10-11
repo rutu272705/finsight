@@ -48,7 +48,7 @@ class Config:
         self.NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "").strip()
         self.NEWS_PROVIDERS = [p.strip().lower() for p in os.getenv("NEWS_PROVIDERS", "newsapi,googlenews,yahoo").split(",") if p.strip()]
 
-        self.SENTIMENT_BACKEND = os.getenv("SENTIMENT_BACKEND", "lexicon").lower()
+        self.SENTIMENT_BACKEND = os.getenv("SENTIMENT_BACKEND", "finbert").lower()
         self.SUMMARIZER_BACKEND = os.getenv("SUMMARIZER_BACKEND", "extractive").lower()
         self.ENTITY_BACKEND = os.getenv("ENTITY_BACKEND", "auto").lower()
 
