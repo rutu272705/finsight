@@ -3,7 +3,11 @@ import { Search } from "lucide-react";
 import { api } from "../api.js";
 
 /** Search by company name or ticker. Falls back to treating the text as a ticker when no match is picked. */
-export default function SearchBar({ onSelect, placeholder = "Search company or ticker (e.g. AAPL, TCS.NS)" }) {
+export default function SearchBar({
+  onSelect,
+  placeholder = "Search company or ticker (e.g. AAPL, TCS.NS)",
+  label = "Search for a company by name or ticker",
+}) {
   const [text, setText] = useState("");
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
@@ -78,7 +82,7 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
   return (
     <div ref={boxRef} className="relative w-full">
       <form onSubmit={submit} role="search" className="relative">
-        <label htmlFor="company-search" className="sr-only">Search for a company by name or ticker</label>
+        <label htmlFor="company-search" className="sr-only">{label}</label>
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" aria-hidden />
         <input
           id="company-search"

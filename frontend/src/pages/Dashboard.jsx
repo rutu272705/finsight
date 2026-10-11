@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Download, RefreshCw, Star, ChevronDown, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import { api } from "../api.js";
 import { useApi } from "../hooks/useApi.js";
 import { changeColor, dateTime, money, pct } from "../format.js";
 import { Card, DashboardSkeleton, EmptyState, ErrorState, Unavailable, Disclaimer } from "../components/ui.jsx";
-import PriceChart from "../components/PriceChart.jsx";
 import PredictionCard from "../components/PredictionCard.jsx";
-import { SentimentDonut, SentimentSummary } from "../components/SentimentPanels.jsx";
+import { SentimentSummary } from "../components/SentimentPanels.jsx";
 import TopicBars from "../components/TopicBars.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
+
+const PriceChart = lazy(() => import("../components/PriceChart.jsx"));
+const SentimentDonut = lazy(() => import("../components/SentimentDonut.jsx"));
 
 const POPULAR_LIST = [
   { sym: "AAPL", name: "Apple Inc.", ex: "NASDAQ" },
@@ -389,13 +391,15 @@ export default function Dashboard({ onPick }) {
             <h3 className="font-serif font-bold text-sm text-stone-900 mb-1">
               Historical Price Action & Trading Volume
             </h3>
-            <PriceChart
-              history={d.history}
-              sentimentDaily={d.sentiment_daily}
-              period={period}
-              onPeriod={setPeriod}
-              currency={d.profile.currency}
-            />
+            <Suspense fallback={<div role="status" className="flex min-h-[320px] items-center justify-center text-xs text-stone-500">Loading price chart...</div>}>
+              <PriceChart
+                history={d.history}
+                sentimentDaily={d.sentiment_daily}
+                period={period}
+                onPeriod={setPeriod}
+                currency={d.profile.currency}
+              />
+            </Suspense>
           </div>
 
           {/* Model Trend Prediction Box */}
@@ -434,7 +438,9 @@ export default function Dashboard({ onPick }) {
                 <h3 className="font-serif font-bold text-sm text-stone-900 mb-2">
                   Polarity Distribution
                 </h3>
-                <SentimentDonut distribution={news.aggregate.distribution} />
+                <Suspense fallback={<div role="status" className="flex min-h-28 items-center justify-center text-xs text-stone-500">Loading chart...</div>}>
+                  <SentimentDonut distribution={news.aggregate.distribution} />
+                </Suspense>
               </div>
 
               {/* Financial Topics */}

@@ -5,12 +5,12 @@ import { api } from "../api.js";
 import { useApi } from "../hooks/useApi.js";
 import { changeColor, money, pct } from "../format.js";
 import { Card, EmptyState, ErrorState, Spinner } from "../components/ui.jsx";
+import SearchBar from "../components/SearchBar.jsx";
 
 export default function Watchlist() {
   const wl = useApi((s) => api.watchlist(s), []);
   const hist = useApi((s) => api.history(s), []);
   const [msg, setMsg] = useState("");
-  const [tickerInput, setTickerInput] = useState("");
   const [adding, setAdding] = useState(false);
 
   const remove = async (sym) => {
@@ -31,18 +31,15 @@ export default function Watchlist() {
     }
   };
 
-  const handleAddTicker = async (e) => {
-    e.preventDefault();
-    const sym = tickerInput.trim().toUpperCase();
+  const handleAddCompany = async (sym) => {
     if (!sym) return;
     setAdding(true);
     setMsg("");
     try {
       await api.addWatch(sym);
-      setTickerInput("");
       wl.reload();
     } catch (e) {
-      setMsg(e.message || "Failed to add ticker to watchlist.");
+      setMsg(e.message || "Failed to add company to watchlist.");
     } finally {
       setAdding(false);
     }
@@ -63,22 +60,15 @@ export default function Watchlist() {
         </div>
 
         {/* Quick Add Form */}
-        <form onSubmit={handleAddTicker} className="flex items-center gap-2">
-          <input
-            type="text"
-            className="input !py-1 w-44 text-xs uppercase"
-            placeholder="Add ticker (e.g. AAPL)"
-            value={tickerInput}
-            onChange={(e) => setTickerInput(e.target.value)}
+        <div className="flex w-full items-center gap-2 md:w-80">
+          <Plus className="h-4 w-4 shrink-0 text-stone-500" aria-hidden />
+          <SearchBar
+            onSelect={handleAddCompany}
+            placeholder="Add by company name or ticker"
+            label="Add a company to your watchlist"
           />
-          <button
-            type="submit"
-            disabled={adding || !tickerInput.trim()}
-            className="btn btn-primary !py-1 !px-3 text-xs"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden /> Add Ticker
-          </button>
-        </form>
+          {adding && <span role="status" className="shrink-0 text-xs text-stone-500">Adding...</span>}
+        </div>
       </div>
 
       {msg && <p role="alert" className="text-xs font-serif font-bold text-amber-800">{msg}</p>}
@@ -94,7 +84,7 @@ export default function Watchlist() {
 
         {wl.data && wl.data.length === 0 && (
           <EmptyState title="Your watchlist is empty">
-            Open any company's dashboard and choose “Add to watchlist” to track it here, or use the quick-add input above.
+            Open any company's dashboard and choose “Add to watchlist” to track it here, or search by company name above.
           </EmptyState>
         )}
 

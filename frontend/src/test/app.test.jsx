@@ -207,12 +207,14 @@ describe("Watchlist page", () => {
     expect(api.removeWatch).toHaveBeenCalledWith("TSLA");
   });
 
-  it("allows adding a ticker directly to watchlist", async () => {
+  it("allows adding a company by name to the watchlist", async () => {
     api.watchlist.mockReturnValue(ok([]));
+    api.search.mockReturnValue(ok([{ symbol: "NVDA", name: "NVIDIA Corporation", exchange: "NASDAQ" }]));
     api.addWatch.mockReturnValue(ok({ symbol: "NVDA", added: true }));
     render(<MemoryRouter><Watchlist /></MemoryRouter>);
-    const input = screen.getByPlaceholderText(/add ticker/i);
-    await userEvent.type(input, "NVDA{Enter}");
+    const input = screen.getByLabelText(/add a company to your watchlist/i);
+    await userEvent.type(input, "nvidia");
+    await userEvent.click(await screen.findByRole("option", { name: /nvidia corporation/i }));
     await waitFor(() => expect(api.addWatch).toHaveBeenCalledWith("NVDA"));
   });
 });

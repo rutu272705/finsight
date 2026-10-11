@@ -7,7 +7,8 @@ import { Card, EmptyState, ErrorState, Spinner, SentimentBadge } from "../compon
 import ArticleCard from "../components/ArticleCard.jsx";
 import FilterBar from "../components/FilterBar.jsx";
 import EntityTags from "../components/EntityTags.jsx";
-import { SentimentSummary, SentimentDonut } from "../components/SentimentPanels.jsx";
+import { SentimentSummary } from "../components/SentimentPanels.jsx";
+import SentimentDonut from "../components/SentimentDonut.jsx";
 import { signed } from "../format.js";
 
 const BLANK = { sentiment: "", source: "", from: "", to: "", days: "14" };
