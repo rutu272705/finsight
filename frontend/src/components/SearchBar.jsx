@@ -66,10 +66,10 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
     <div ref={boxRef} className="relative w-full">
       <form onSubmit={submit} role="search" className="relative">
         <label htmlFor="company-search" className="sr-only">Search for a company by name or ticker</label>
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" aria-hidden />
         <input
           id="company-search"
-          className="input pl-9"
+          className="input pl-8 text-xs font-sans"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={() => results.length && setOpen(true)}
@@ -80,20 +80,20 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
         />
       </form>
       {open && (results.length > 0 || warn) && (
-        <div className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-          {warn && <p className="border-b border-slate-100 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-800">{warn}</p>}
-          <ul role="listbox" className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+        <div className="absolute z-40 mt-1 w-full border border-black bg-white shadow-lg">
+          {warn && <p className="border-b border-stone-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-900">{warn}</p>}
+          <ul role="listbox" className="divide-y divide-stone-100 max-h-72 overflow-y-auto">
             {results.map((r) => (
               <li key={r.symbol}>
                 <button
                   type="button"
                   role="option"
-                  className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-slate-50"
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs transition-colors hover:bg-stone-100 font-serif"
                   onClick={() => choose(r.symbol)}
                 >
-                  <span className="min-w-0 truncate font-medium text-slate-800">{r.name}</span>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    <span className="font-semibold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{r.symbol}</span>
+                  <span className="min-w-0 truncate font-bold text-stone-900">{r.name}</span>
+                  <span className="shrink-0 text-[10px] text-stone-500 font-sans">
+                    <span className="font-bold text-stone-900 bg-stone-100 px-1 py-0.5 border border-stone-200">{r.symbol}</span>
                     {r.exchange ? ` · ${r.exchange}` : ""}
                   </span>
                 </button>

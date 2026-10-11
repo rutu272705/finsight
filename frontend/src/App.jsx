@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api.js";
-import Sidebar, { Logo } from "./components/Sidebar.jsx";
-import SearchBar from "./components/SearchBar.jsx";
+import BroadsheetHeader from "./components/BroadsheetHeader.jsx";
+import BroadsheetFooter from "./components/BroadsheetFooter.jsx";
+import Sidebar from "./components/Sidebar.jsx";
+import BackToTop from "./components/BackToTop.jsx";
 import { DemoBanner } from "./components/ui.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import News from "./pages/News.jsx";
@@ -46,32 +48,28 @@ export default function App() {
   const go = (sym) => navigate(`/${SECTIONS.includes(section) ? section : "stock"}/${encodeURIComponent(sym)}`);
 
   return (
-    <div className="min-h-full bg-slate-50 text-slate-900">
+    <div className="min-h-full bg-white text-stone-900 flex flex-col">
+      {health?.demo_mode && <DemoBanner />}
+      <BroadsheetHeader symbol={lastSymbol} health={health} onSelect={go} />
+      
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 md:py-8">
+        <Routes>
+          <Route path="/" element={<Dashboard onPick={go} />} />
+          <Route path="/stock/:symbol" element={<Dashboard onPick={go} />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:symbol" element={<News />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/analytics/:symbol" element={<Analytics />} />
+          <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/about" element={<About />} />
+          <Route path="*" element={<Dashboard onPick={go} />} />
+        </Routes>
+      </main>
+
+      <BroadsheetFooter />
+      {/* Mobile navigation bar */}
       <Sidebar symbol={lastSymbol} health={health} />
-      <div className="md:pl-56">
-        {health?.demo_mode && <DemoBanner />}
-        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
-          <div className="md:hidden">
-            <Logo />
-          </div>
-          <div className="mx-auto w-full max-w-xl md:mx-0">
-            <SearchBar onSelect={go} />
-          </div>
-        </header>
-        <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:px-6 md:pb-12">
-          <Routes>
-            <Route path="/" element={<Dashboard onPick={go} />} />
-            <Route path="/stock/:symbol" element={<Dashboard onPick={go} />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/news/:symbol" element={<News />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/analytics/:symbol" element={<Analytics />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<Dashboard onPick={go} />} />
-          </Routes>
-        </main>
-      </div>
+      <BackToTop />
     </div>
   );
 }

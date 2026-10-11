@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Download, RefreshCw, Star, ChevronDown } from "lucide-react";
+import { Download, RefreshCw, Star, ChevronDown, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import { api } from "../api.js";
 import { useApi } from "../hooks/useApi.js";
 import { changeColor, dateTime, money, pct } from "../format.js";
@@ -11,55 +11,187 @@ import { SentimentDonut, SentimentSummary } from "../components/SentimentPanels.
 import TopicBars from "../components/TopicBars.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
 
-const POPULAR = ["RELIANCE.NS", "TCS.NS", "INFY.NS", "AAPL", "TSLA", "NVDA"];
+const POPULAR_LIST = [
+  { sym: "AAPL", name: "Apple Inc.", ex: "NASDAQ" },
+  { sym: "TSLA", name: "Tesla, Inc.", ex: "NASDAQ" },
+  { sym: "NVDA", name: "NVIDIA Corp.", ex: "NASDAQ" },
+  { sym: "RELIANCE.NS", name: "Reliance Industries", ex: "NSE" },
+  { sym: "TCS.NS", name: "Tata Consultancy", ex: "NSE" },
+];
+
+function BroadsheetWire({ recent, onPick, currentSymbol }) {
+  return (
+    <aside className="space-y-6 lg:border-r lg:border-stone-200 lg:pr-6">
+      {/* Latest Articles / Wire */}
+      <div>
+        <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
+          Market Wire
+        </h3>
+        <ul className="space-y-2 text-xs divide-y divide-stone-100">
+          <li className="pt-1">
+            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Global Macro</span>
+            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("AAPL")}>
+              Central bank interest rate decisions guide equity valuation multiples.
+            </p>
+          </li>
+          <li className="pt-2">
+            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Earnings Watch</span>
+            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("NVDA")}>
+              Semiconductor demand surge bolsters quarterly forecasts and guidance.
+            </p>
+          </li>
+          <li className="pt-2">
+            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Energy & Commodities</span>
+            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("RELIANCE.NS")}>
+              Refinery margins fluctuate amid changing international trade policies.
+            </p>
+          </li>
+        </ul>
+      </div>
+
+      {/* Most Popular Tickers (Numbered 1 to 5 exactly like the newspaper image) */}
+      <div className="border-t border-stone-200 pt-5">
+        <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
+          Most Popular
+        </h3>
+        <ol className="space-y-3">
+          {POPULAR_LIST.map((item, index) => (
+            <li key={item.sym} className="flex items-start gap-3 group">
+              <span className="font-serif italic font-black text-2xl text-stone-400 group-hover:text-black leading-none w-5 text-right shrink-0">
+                {index + 1}
+              </span>
+              <button
+                type="button"
+                className="text-left flex-1"
+                onClick={() => onPick(item.sym)}
+              >
+                <p className="font-serif font-bold text-xs text-stone-900 group-hover:underline leading-snug">
+                  {item.name}
+                </p>
+                <p className="text-[10px] text-stone-500 uppercase tracking-wider font-sans">
+                  <span className="font-bold text-stone-800">{item.sym}</span> · {item.ex}
+                </p>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Recently Searched */}
+      {recent?.length > 0 && (
+        <div className="border-t border-stone-200 pt-5">
+          <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-stone-200 pb-1 mb-3">
+            Recently Searched
+          </h3>
+          <ul className="space-y-1.5 text-xs">
+            {recent.map((r) => (
+              <li key={r.symbol}>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between text-left py-1 hover:text-black group"
+                  onClick={() => onPick(r.symbol)}
+                >
+                  <span className="truncate text-stone-700 font-serif group-hover:underline">{r.name || r.symbol}</span>
+                  <span className="font-sans font-bold text-[10px] text-stone-500 bg-stone-100 px-1 border border-stone-200">
+                    {r.symbol}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </aside>
+  );
+}
 
 function Home({ onPick }) {
   const { data: recent } = useApi((s) => api.history(s), []);
   return (
-    <div className="mx-auto max-w-3xl py-12 sm:py-20">
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-8 sm:p-12 shadow-sm text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-          NLP Financial Intelligence
-        </span>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-          Read the news the way the market does.
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-base text-slate-600 leading-relaxed">
-          Search any company or ticker to analyse sentiment, extract financial figures and entities, and forecast the next trading sessions with machine learning.
-        </p>
-        <div className="mt-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Popular companies</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {POPULAR.map((s) => (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Left Column: Market Wire & Most Popular */}
+      <div className="lg:col-span-3">
+        <BroadsheetWire recent={recent} onPick={onPick} />
+      </div>
+
+      {/* Center Column: Breaking Lead Story */}
+      <div className="lg:col-span-6 lg:border-r lg:border-stone-200 lg:pr-8 space-y-6">
+        <div>
+          <span className="broadsheet-kicker">Lead Editorial & Market Intelligence</span>
+          <h2 className="font-serif font-black text-3xl sm:text-5xl text-stone-950 tracking-tight leading-tight mt-1">
+            Read the news the way the market does.
+          </h2>
+          <div className="mt-2 text-xs text-stone-500 font-serif italic border-b border-stone-200 pb-3">
+            By Quantitative NLP Editorial Desk · Published Daily
+          </div>
+          <p className="mt-4 font-serif text-sm sm:text-base leading-relaxed text-stone-800">
+            Search any publicly traded corporation to examine how recent financial press classifies sentiment, extracts named entities and financial metrics, and predicts the next five trading sessions via walk-forward machine learning models.
+          </p>
+        </div>
+
+        {/* Quick Ticker Launcher Box */}
+        <div className="border border-stone-900 p-5 bg-stone-50/50">
+          <p className="font-sans text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5">
+            Select an active market company to begin analysis
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_LIST.map((item) => (
               <button
-                key={s}
-                className="btn hover:border-slate-400 font-semibold text-slate-800"
-                onClick={() => onPick(s)}
+                key={item.sym}
+                className="btn"
+                onClick={() => onPick(item.sym)}
               >
-                {s}
+                {item.sym}
               </button>
             ))}
           </div>
         </div>
-        {recent?.length > 0 && (
-          <div className="mt-10 border-t border-slate-100 pt-8 text-left">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Recently searched</p>
-            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50">
-              {recent.map((r) => (
-                <button
-                  key={r.symbol}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors hover:bg-white"
-                  onClick={() => onPick(r.symbol)}
-                >
-                  <span className="truncate font-medium text-slate-800">{r.name || r.symbol}</span>
-                  <span className="rounded border border-slate-200 bg-white px-2 py-0.5 text-xs font-bold text-slate-700 shadow-xs">
-                    {r.symbol}
-                  </span>
-                </button>
-              ))}
+
+        {/* Lead Analysis Preview Story */}
+        <div className="border-t border-stone-200 pt-5 space-y-3">
+          <span className="broadsheet-kicker">Methodology Spotlight</span>
+          <h3 className="font-serif font-bold text-xl text-stone-900">
+            Natural Language Processing vs. Traditional Price Volatility
+          </h3>
+          <p className="font-serif text-xs text-stone-700 leading-relaxed">
+            Short-term market oscillations often defy simplistic sentiment heuristics. FinSight benchmarks every classification against a naive baseline, revealing when news signals genuinely lead price discovery versus when noise dominates.
+          </p>
+          <Link to="/about" className="inline-block text-xs font-bold uppercase tracking-wider text-stone-900 hover:underline">
+            Read Full Methodology Report →
+          </Link>
+        </div>
+      </div>
+
+      {/* Right Column: Daily Feed & Methodology Brief */}
+      <div className="lg:col-span-3 space-y-6">
+        <div>
+          <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
+            Daily Feed
+          </h3>
+          <div className="space-y-4 text-xs font-serif divide-y divide-stone-100">
+            <div className="pt-2">
+              <span className="broadsheet-kicker">NLP Lexicon</span>
+              <h4 className="font-bold text-stone-900 mt-0.5">Finance-Specific Terminology</h4>
+              <p className="text-stone-600 mt-1 leading-snug">
+                Every headline is scored positive, negative, or neutral through domain-tuned financial lexicons accounting for negation and intensity.
+              </p>
+            </div>
+            <div className="pt-3">
+              <span className="broadsheet-kicker">Machine Learning</span>
+              <h4 className="font-bold text-stone-900 mt-0.5">Walk-Forward Model Validation</h4>
+              <p className="text-stone-600 mt-1 leading-snug">
+                Three classifiers compete under rolling backtests with strict label separation to avert data snooping.
+              </p>
+            </div>
+            <div className="pt-3">
+              <span className="broadsheet-kicker">Entity Extraction</span>
+              <h4 className="font-bold text-stone-900 mt-0.5">Named Organisations & Figures</h4>
+              <p className="text-stone-600 mt-1 leading-snug">
+                Extracts dollar sums, revenues, and key executives from coverage text.
+              </p>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -70,97 +202,98 @@ function CompanyHeader({ d, onRefresh, refreshing, refreshError, watching, onTog
   const [showExport, setShowExport] = useState(false);
 
   return (
-    <section className="panel p-5 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <h1 className="truncate text-2xl font-bold text-slate-900 sm:text-3xl">{profile.name}</h1>
-            <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-800">
-              {symbol}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            {profile.exchange ? `${profile.exchange}` : ""}
+    <section className="border-b-2 border-black pb-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
+        <div>
+          <span className="broadsheet-kicker">Lead Equity Coverage · {profile.exchange || "Stock Market"}</span>
+          <h1 className="font-serif font-black text-3xl sm:text-5xl text-stone-950 tracking-tight mt-0.5">
+            {profile.name}
+          </h1>
+          <p className="mt-1 text-xs text-stone-500 font-sans">
+            Ticker Symbol <strong className="text-stone-900 font-bold">{symbol}</strong>
             {profile.currency ? ` · Currency in ${profile.currency}` : ""}
           </p>
         </div>
+
         <div className="text-right">
-          <p className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl" aria-label="Latest price">
+          <p className="font-serif font-black text-3xl sm:text-5xl tracking-tight text-stone-950" aria-label="Latest price">
             {money(quote.price, profile.currency)}
           </p>
-          <p className={`mt-1 text-sm font-semibold ${changeColor(quote.change)}`}>
+          <p className={`mt-0.5 text-xs font-bold font-sans ${changeColor(quote.change)}`}>
             {quote.change > 0 ? "+" : ""}
-            {quote.change.toFixed(2)} ({pct(quote.change_pct)}){" "}
-            <span className="font-normal text-slate-400">on {quote.as_of}</span>
+            {quote.change.toFixed(2)} ({pct(quote.change_pct)}) <span className="font-normal text-stone-500">as of {quote.as_of}</span>
           </p>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
-        <p>
+      {/* Action Controls & Broadsheet Dateline */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 pt-3 text-xs text-stone-600 font-sans">
+        <p className="font-serif italic text-stone-500">
           Last updated {dateTime(d.last_updated)}
-          {d.demo && " · synthetic demo data"}
+          {d.demo && " · synthetic broadsheet data"}
         </p>
+
         <div className="flex flex-wrap items-center gap-2">
           <button
-            className={`btn transition-colors ${watching ? "border-amber-200 bg-amber-50 text-amber-900 font-semibold" : ""}`}
+            className={`btn ${watching ? "border-black bg-stone-100 text-stone-950 font-bold" : ""}`}
             onClick={onToggleWatch}
             disabled={watchBusy}
             aria-pressed={watching}
           >
-            <Star className={`h-4 w-4 ${watching ? "fill-amber-400 text-amber-500" : "text-slate-400"}`} aria-hidden />{" "}
+            <Star className={`h-3.5 w-3.5 ${watching ? "fill-black text-black" : "text-stone-500"}`} aria-hidden />{" "}
             {watching ? "On watchlist" : "Add to watchlist"}
           </button>
 
           <div className="relative">
             <div className="flex items-center">
-              <a className="btn rounded-r-none border-r-0" href={api.exportUrl(symbol, "articles")}>
-                <Download className="h-4 w-4 text-slate-500" aria-hidden /> Export CSV
+              <a className="btn border-r-0" href={api.exportUrl(symbol, "articles")}>
+                <Download className="h-3.5 w-3.5 text-stone-600" aria-hidden /> Export CSV
               </a>
               <button
                 type="button"
                 onClick={() => setShowExport(!showExport)}
-                className="btn !px-2 rounded-l-none"
+                className="btn !px-1.5"
                 aria-label="More export formats"
               >
-                <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+                <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </div>
             {showExport && (
               <div
-                className="absolute right-0 z-30 mt-1 w-44 rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+                className="absolute right-0 z-30 mt-1 w-44 border border-stone-900 bg-white py-1 shadow-lg text-xs"
                 onMouseLeave={() => setShowExport(false)}
               >
                 <a
                   href={api.exportUrl(symbol, "articles")}
-                  className="block px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  className="block px-3 py-1.5 text-stone-800 hover:bg-stone-100 font-serif"
                   onClick={() => setShowExport(false)}
                 >
                   Articles analysis CSV
                 </a>
                 <a
                   href={api.exportUrl(symbol, "prices")}
-                  className="block px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  className="block px-3 py-1.5 text-stone-800 hover:bg-stone-100 font-serif"
                   onClick={() => setShowExport(false)}
                 >
-                  1-Year Prices CSV
+                  Historical Prices CSV
                 </a>
                 <a
                   href={api.exportUrl(symbol, "predictions")}
-                  className="block px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  className="block px-3 py-1.5 text-stone-800 hover:bg-stone-100 font-serif"
                   onClick={() => setShowExport(false)}
                 >
-                  Prediction history CSV
+                  Predictions CSV
                 </a>
               </div>
             )}
           </div>
 
           <button className="btn" onClick={onRefresh} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 text-slate-500 ${refreshing ? "animate-spin" : ""}`} aria-hidden /> Refresh data
+            <RefreshCw className={`h-3.5 w-3.5 text-stone-600 ${refreshing ? "animate-spin" : ""}`} aria-hidden /> Refresh data
           </button>
         </div>
-        {refreshError && <p role="alert" className="w-full text-xs font-medium text-amber-700">{refreshError}</p>}
+
+        {refreshError && <p role="alert" className="w-full text-xs font-serif font-bold text-amber-800">{refreshError}</p>}
       </div>
     </section>
   );
@@ -177,19 +310,22 @@ export default function Dashboard({ onPick }) {
   const [watchBusy, setWatchBusy] = useState(false);
 
   const { data, error, loading, reload } = useApi((signal) => (sym ? api.dashboard(sym, { period }, signal) : null), [sym, period]);
+  const { data: recentHistory } = useApi((s) => api.history(s), []);
+
   useEffect(() => {
     setOverride(null);
     setRefreshError("");
     setWatching(null);
   }, [sym, period]);
   useEffect(() => {
-    document.title = sym ? `${sym} · FinSight` : "FinSight";
+    document.title = sym ? `${sym} · The FinSight Chronicle` : "The FinSight Chronicle";
   }, [sym]);
 
   if (!sym) return <Home onPick={onPick} />;
   if (loading && !data) return <DashboardSkeleton />;
   if (error) return <ErrorState error={error} onRetry={reload} title={`Couldn't load ${sym}`} />;
   if (!data) return null;
+
   const d = override || data;
   const isWatching = watching ?? d.in_watchlist;
 
@@ -223,7 +359,8 @@ export default function Dashboard({ onPick }) {
   const articles = newsDown ? [] : news.articles;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
+      {/* Lead Company Header */}
       <CompanyHeader
         d={d}
         onRefresh={refresh}
@@ -234,71 +371,124 @@ export default function Dashboard({ onPick }) {
         watchBusy={watchBusy}
       />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Card title="Price history" subtitle="Daily closing price" className="lg:col-span-2">
-          <PriceChart
-            history={d.history}
-            sentimentDaily={d.sentiment_daily}
-            period={period}
-            onPeriod={setPeriod}
-            currency={d.profile.currency}
-          />
-        </Card>
-        <Card title="Predicted trend" subtitle="Experimental, short-term">
-          <PredictionCard prediction={d.prediction} symbol={sym} />
-        </Card>
+      {/* 3-Column Broadsheet Layout (Exactly like the uploaded newspaper format) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Column 1: Market Wire & Most Popular */}
+        <div className="lg:col-span-3">
+          <BroadsheetWire recent={recentHistory} onPick={onPick} currentSymbol={sym} />
+        </div>
+
+        {/* Column 2: Breaking News & Centerpiece Price/Forecast */}
+        <div className="lg:col-span-6 lg:border-r lg:border-stone-200 lg:pr-8 space-y-6">
+          <h2 className="font-serif italic font-bold text-xl text-stone-900 border-b border-black pb-1">
+            Breaking News & Market Action
+          </h2>
+
+          {/* Price Action Broadsheet Chart */}
+          <div className="border border-stone-200 p-4">
+            <h3 className="font-serif font-bold text-sm text-stone-900 mb-1">
+              Historical Price Action & Trading Volume
+            </h3>
+            <PriceChart
+              history={d.history}
+              sentimentDaily={d.sentiment_daily}
+              period={period}
+              onPeriod={setPeriod}
+              currency={d.profile.currency}
+            />
+          </div>
+
+          {/* Model Trend Prediction Box */}
+          <div className="border border-stone-900 p-4 bg-stone-50/30">
+            <h3 className="font-serif font-bold text-sm text-stone-900 mb-1">
+              Experimental Machine Learning Forecast
+            </h3>
+            <PredictionCard prediction={d.prediction} symbol={sym} />
+          </div>
+        </div>
+
+        {/* Column 3: Daily Feed & Sentiment Pulse */}
+        <div className="lg:col-span-3 space-y-6">
+          <h2 className="font-serif italic font-bold text-xl text-stone-900 border-b border-black pb-1">
+            Daily Feed
+          </h2>
+
+          {newsDown ? (
+            <div className="border border-stone-200 p-4 text-center">
+              <p className="text-xs text-stone-500 font-serif italic">
+                Sentiment feed suspended while upstream dispatches are unavailable.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Sentiment Summary Score */}
+              <div className="border border-stone-200 p-4">
+                <h3 className="font-serif font-bold text-sm text-stone-900 mb-2">
+                  Editorial Sentiment Score
+                </h3>
+                <SentimentSummary aggregate={news.aggregate} />
+              </div>
+
+              {/* Sentiment Donut Breakdown */}
+              <div className="border border-stone-200 p-4">
+                <h3 className="font-serif font-bold text-sm text-stone-900 mb-2">
+                  Polarity Distribution
+                </h3>
+                <SentimentDonut distribution={news.aggregate.distribution} />
+              </div>
+
+              {/* Financial Topics */}
+              <div className="border border-stone-200 p-4">
+                <h3 className="font-serif font-bold text-sm text-stone-900 mb-2">
+                  Key Financial Topics
+                </h3>
+                <TopicBars items={news.topics.topics.slice(0, 5)} />
+              </div>
+
+              {/* Named Organisations */}
+              <div className="border border-stone-200 p-4">
+                <h3 className="font-serif font-bold text-sm text-stone-900 mb-2">
+                  Mentioned Organisations
+                </h3>
+                <TopicBars items={news.topics.companies.slice(0, 5)} color="#15803d" emptyText="No organisations recognised." />
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      {newsDown ? (
-        <Unavailable what="News and sentiment" reason={news.reason} />
-      ) : articles.length === 0 ? (
-        <EmptyState title="No relevant news found" action={<Link to={`/news/${sym}`} className="btn mt-3">Widen the date range</Link>}>
-          No articles about {d.profile.name} were found in the last 14 days. Smaller companies are often not covered by free news feeds. Price and trend data above are unaffected.
-        </EmptyState>
-      ) : (
-        <>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            <Card title="Sentiment score">
-              <SentimentSummary aggregate={news.aggregate} />
-            </Card>
-            <Card title="Sentiment mix" subtitle={`${news.aggregate.n_articles} articles analysed`}>
-              <SentimentDonut distribution={news.aggregate.distribution} />
-            </Card>
-            <Card title="Key financial topics" subtitle="Most frequent across headlines">
-              <TopicBars items={news.topics.topics.slice(0, 6)} />
-            </Card>
+      {/* Lower Section: Featured Stories (Full-Width 3-Column Grid Referenced From Image) */}
+      <div className="border-t-2 border-black pt-6">
+        <div className="flex items-center justify-between mb-6 border-b border-stone-200 pb-2">
+          <h2 className="font-serif italic font-black text-2xl sm:text-3xl text-stone-950">
+            Featured Stories & Corporate News Coverage
+          </h2>
+          <Link to={`/news/${sym}`} className="text-xs font-bold uppercase tracking-wider text-stone-900 hover:underline">
+            All Articles & Filters →
+          </Link>
+        </div>
+
+        {newsDown ? (
+          <Unavailable what="News and sentiment" reason={news.reason} />
+        ) : articles.length === 0 ? (
+          <EmptyState
+            title="No relevant news found"
+            action={<Link to={`/news/${sym}`} className="btn mt-3">Widen the date range</Link>}
+          >
+            No articles about {d.profile.name} were found in the last 14 days. Smaller companies are often not covered by free news feeds. Price and trend data above are unaffected.
+          </EmptyState>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {articles.slice(0, 6).map((a) => (
+              <ArticleCard key={a.url || a.title} article={a} />
+            ))}
           </div>
-          <div className="grid gap-5 lg:grid-cols-3">
-            <Card
-              title="Recent headlines"
-              className="lg:col-span-2"
-              action={
-                <Link to={`/news/${sym}`} className="text-xs font-semibold text-blue-600 hover:text-blue-800">
-                  All articles and filters →
-                </Link>
-              }
-            >
-              <div className="space-y-3">
-                {articles.slice(0, 6).map((a) => (
-                  <ArticleCard key={a.url || a.title} article={a} compact />
-                ))}
-              </div>
-            </Card>
-            <div className="space-y-5">
-              <Card title="Frequently mentioned" subtitle="Organisations in the news">
-                <TopicBars items={news.topics.companies.slice(0, 6)} color="#16A34A" emptyText="No organisations recognised." />
-              </Card>
-              <Card title="People" subtitle="Named in coverage">
-                <TopicBars items={news.topics.people.slice(0, 5)} color="#0284C7" emptyText="No people recognised." />
-              </Card>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500">
-            News via {news.providers_used.join(", ")}. {news.warnings.length > 0 && `Note: ${news.warnings.join(" ")}`}
-          </p>
-        </>
-      )}
-      <Disclaimer>FinSight is an educational project. Sentiment scores and trend forecasts are experimental and are not investment advice.</Disclaimer>
+        )}
+      </div>
+
+      <Disclaimer>
+        The FinSight Chronicle is an educational NLP intelligence project. Sentiment scores and trend forecasts are experimental models and are not financial advice.
+      </Disclaimer>
     </div>
   );
 }

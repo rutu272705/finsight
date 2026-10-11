@@ -2,12 +2,12 @@ import { AlertTriangle, Inbox, Loader2, RefreshCw, FlaskConical, Info } from "lu
 
 export function Card({ title, subtitle, action, children, className = "" }) {
   return (
-    <section className={`panel p-4 sm:p-5 ${className}`}>
+    <section className={`border border-stone-200 bg-white p-4 sm:p-5 ${className}`}>
       {(title || action) && (
-        <header className="mb-3 flex items-start justify-between gap-3">
+        <header className="mb-3 flex items-start justify-between gap-3 border-b border-stone-100 pb-2">
           <div>
-            {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
-            {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+            {title && <h2 className="font-serif font-bold text-base text-stone-900 tracking-tight">{title}</h2>}
+            {subtitle && <p className="mt-0.5 text-xs text-stone-500">{subtitle}</p>}
           </div>
           {action}
         </header>
@@ -19,26 +19,26 @@ export function Card({ title, subtitle, action, children, className = "" }) {
 
 export function Spinner({ label = "Loading" }) {
   return (
-    <div role="status" aria-live="polite" className="flex items-center gap-2 py-6 text-sm text-slate-500">
-      <Loader2 className="h-4 w-4 animate-spin text-slate-900" aria-hidden />
-      <span>{label}…</span>
+    <div role="status" aria-live="polite" className="flex items-center gap-2 py-8 text-sm text-stone-600 justify-center">
+      <Loader2 className="h-4 w-4 animate-spin text-stone-900" aria-hidden />
+      <span className="font-serif italic">{label}…</span>
     </div>
   );
 }
 
 export function Skeleton({ className = "" }) {
-  return <div aria-hidden className={`skeleton rounded-lg ${className}`} />;
+  return <div aria-hidden className={`skeleton ${className}`} />;
 }
 
 export function DashboardSkeleton() {
   return (
-    <div role="status" aria-live="polite" aria-label="Loading dashboard" className="space-y-4">
-      <Skeleton className="h-24" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-[380px] lg:col-span-2" />
-        <Skeleton className="h-[380px]" />
+    <div role="status" aria-live="polite" aria-label="Loading dashboard" className="space-y-6">
+      <Skeleton className="h-28" />
+      <div className="grid gap-6 lg:grid-cols-12">
+        <Skeleton className="h-[420px] lg:col-span-8" />
+        <Skeleton className="h-[420px] lg:col-span-4" />
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
         <Skeleton className="h-48" />
@@ -52,15 +52,15 @@ export function ErrorState({ error, onRetry, title = "Something went wrong" }) {
   const network = error?.code === "network";
   const heading = network ? "Can't reach the server" : error?.status === 404 ? "Nothing found" : error?.code === "rate_limited" ? "Slow down a moment" : title;
   return (
-    <div role="alert" className="panel flex flex-col items-start gap-3 border-rose-200 bg-rose-50/30 p-5">
-      <div className="flex items-center gap-2 text-rose-700">
+    <div role="alert" className="border border-rose-300 bg-rose-50/20 p-5 flex flex-col items-start gap-3">
+      <div className="flex items-center gap-2 text-rose-800">
         <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
-        <h2 className="text-sm font-semibold">{heading}</h2>
+        <h2 className="font-serif font-bold text-base">{heading}</h2>
       </div>
-      <p className="max-w-prose text-sm text-slate-600">{error?.message || "An unexpected error occurred."}</p>
+      <p className="max-w-prose text-sm text-stone-700 leading-relaxed">{error?.message || "An unexpected error occurred."}</p>
       {onRetry && error?.code !== "validation_error" && (
         <button className="btn" onClick={onRetry}>
-          <RefreshCw className="h-4 w-4" aria-hidden /> Try again
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Try again
         </button>
       )}
     </div>
@@ -69,10 +69,10 @@ export function ErrorState({ error, onRetry, title = "Something went wrong" }) {
 
 export function EmptyState({ title, children, action }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-xs">
-      <Inbox className="h-7 w-7 text-slate-400" aria-hidden />
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      {children && <div className="max-w-md text-sm text-slate-500">{children}</div>}
+    <div className="flex flex-col items-center gap-2.5 border border-stone-200 bg-stone-50/40 p-8 sm:p-12 text-center">
+      <Inbox className="h-7 w-7 text-stone-400" aria-hidden />
+      <h3 className="font-serif font-bold text-lg text-stone-900">{title}</h3>
+      {children && <div className="max-w-md text-sm text-stone-600 leading-relaxed">{children}</div>}
       {action}
     </div>
   );
@@ -81,11 +81,11 @@ export function EmptyState({ title, children, action }) {
 /** Inline notice for one dashboard section whose data source failed. Shown instead of fabricated numbers. */
 export function Unavailable({ what, reason }) {
   return (
-    <div role="status" className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm">
+    <div role="status" className="flex gap-3 border border-amber-300 bg-amber-50/50 p-4 text-sm">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
       <div>
-        <p className="font-semibold text-amber-900">{what} unavailable</p>
-        <p className="mt-0.5 text-slate-600">{reason}</p>
+        <p className="font-serif font-bold text-amber-950">{what} unavailable</p>
+        <p className="mt-0.5 text-stone-700">{reason}</p>
       </div>
     </div>
   );
@@ -93,10 +93,10 @@ export function Unavailable({ what, reason }) {
 
 export function DemoBanner() {
   return (
-    <div role="note" className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
-      <FlaskConical className="h-4 w-4 shrink-0 text-amber-700" aria-hidden />
+    <div role="note" className="flex items-center justify-center gap-2 border-b border-stone-300 bg-stone-100 px-4 py-2 text-xs text-stone-800">
+      <FlaskConical className="h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
       <span>
-        <strong>Demo mode:</strong> prices and headlines are synthetic sample data for offline demonstration, not real market information.
+        <strong>Broadsheet Demo Mode:</strong> Prices and headlines are synthetic sample data for offline demonstration, not real market information.
       </span>
     </div>
   );
@@ -104,8 +104,8 @@ export function DemoBanner() {
 
 export function Disclaimer({ children }) {
   return (
-    <p className="flex items-start gap-2 text-xs text-slate-500">
-      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+    <p className="flex items-start gap-2 text-xs text-stone-500 font-serif italic border-t border-stone-200 pt-3">
+      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-400 not-italic" aria-hidden />
       <span>{children}</span>
     </p>
   );
@@ -113,10 +113,14 @@ export function Disclaimer({ children }) {
 
 export function SentimentBadge({ label }) {
   const map = {
-    positive: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    negative: "border-rose-200 bg-rose-50 text-rose-700",
-    neutral: "border-slate-200 bg-slate-100 text-slate-700",
+    positive: "border-emerald-700 bg-emerald-50 text-emerald-800",
+    negative: "border-rose-700 bg-rose-50 text-rose-800",
+    neutral: "border-stone-400 bg-stone-100 text-stone-800",
   };
   const text = { positive: "Positive", negative: "Negative", neutral: "Neutral" };
-  return <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${map[label] || map.neutral}`}>{text[label] || "—"}</span>;
+  return (
+    <span className={`inline-flex items-center border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${map[label] || map.neutral}`}>
+      {text[label] || "—"}
+    </span>
+  );
 }

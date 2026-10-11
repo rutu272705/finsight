@@ -47,29 +47,31 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
   };
 
   return (
-    <div className="panel p-5">
+    <div className="border border-stone-900 bg-stone-50/50 p-5">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-600" aria-hidden />
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="h-4 w-4 text-stone-900" aria-hidden />
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">Custom Text & News NLP Analyzer</h3>
-            <p className="text-xs text-slate-500">Test FinSight's sentiment and entity extraction on your own financial headline or text.</p>
+            <h3 className="font-serif font-bold text-base text-stone-900">Custom Text & News NLP Analyzer</h3>
+            <p className="text-xs text-stone-600 font-serif italic">Test FinSight's sentiment and entity extraction on your own financial statement or headline.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="btn text-xs font-semibold"
+          className="btn"
         >
           {open ? "Hide tool" : "Open analyzer"}
         </button>
       </div>
 
       {open && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-stone-200 pt-4">
           <form onSubmit={handleAnalyze} className="space-y-3">
             <div>
-              <label htmlFor="custom-headline" className="block text-xs font-semibold text-slate-700">Headline or Statement *</label>
+              <label htmlFor="custom-headline" className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+                Headline or Corporate Statement *
+              </label>
               <input
                 id="custom-headline"
                 type="text"
@@ -81,7 +83,9 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
               />
             </div>
             <div>
-              <label htmlFor="custom-description" className="block text-xs font-semibold text-slate-700">Additional Text or Snippet (Optional)</label>
+              <label htmlFor="custom-description" className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+                Additional Text or Article Paragraph (Optional)
+              </label>
               <textarea
                 id="custom-description"
                 rows={2}
@@ -97,7 +101,7 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
                 disabled={analyzing || !headline.trim()}
                 className="btn btn-primary"
               >
-                <Send className="h-3.5 w-3.5" aria-hidden />
+                <Send className="h-3 w-3" aria-hidden />
                 {analyzing ? "Analyzing..." : "Analyze with FinSight NLP"}
               </button>
               {headline && (
@@ -112,34 +116,34 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
             </div>
           </form>
 
-          {analysisError && <p className="mt-3 text-xs text-rose-600 font-medium">{analysisError}</p>}
+          {analysisError && <p className="mt-3 text-xs text-rose-800 font-serif font-bold">{analysisError}</p>}
 
           {analysisResult && (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Analysis Result</span>
+            <div className="mt-4 border border-stone-300 bg-white p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+                <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-500">Analysis Result</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-600">Score: <strong>{signed(analysisResult.sentiment?.score)}</strong></span>
+                  <span className="text-xs text-stone-600 font-serif">Score: <strong>{signed(analysisResult.sentiment?.score)}</strong></span>
                   <SentimentBadge label={analysisResult.sentiment?.label} />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-slate-900">{analysisResult.title}</p>
+              <p className="font-serif font-bold text-base text-stone-900">{analysisResult.title}</p>
               {analysisResult.summary && (
-                <p className="text-xs text-slate-600 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200">
-                  <strong className="text-slate-800">Summary: </strong>{analysisResult.summary}
+                <p className="text-xs text-stone-700 leading-relaxed font-serif bg-stone-50 p-2.5 border border-stone-200">
+                  <strong className="text-stone-900">Summary: </strong>{analysisResult.summary}
                 </p>
               )}
               {analysisResult.explanation?.signals?.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-semibold text-slate-700">Key signals identified: </span>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
+                  <span className="font-bold text-[10px] uppercase tracking-wider text-stone-500">Key signals identified: </span>
+                  <div className="mt-1 flex flex-wrap gap-1.5 font-sans">
                     {analysisResult.explanation.signals.map((s, i) => (
                       <span
                         key={i}
-                        className={`chip font-medium ${
+                        className={`chip text-[10px] font-bold ${
                           s.polarity === "positive"
-                            ? "!border-emerald-200 !bg-emerald-50 !text-emerald-800"
-                            : "!border-rose-200 !bg-rose-50 !text-rose-800"
+                            ? "!border-emerald-700 !bg-emerald-50 !text-emerald-900"
+                            : "!border-rose-700 !bg-rose-50 !text-rose-900"
                         }`}
                       >
                         {s.term} {s.delta !== undefined && `(${signed(s.delta)})`}
@@ -174,17 +178,19 @@ export default function News() {
 
   if (!sym) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <EmptyState title="Pick a company first">
           Use the search bar above to choose a company, then its news appears here with filters for date, source and sentiment.
-          <div className="mt-5 border-t border-slate-200 pt-4">
-            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">Or pick a popular company to start</p>
+          <div className="mt-6 border-t border-stone-200 pt-4">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+              Select an active corporation to load dispatches
+            </p>
             <div className="flex flex-wrap justify-center gap-2">
               {POPULAR.map((s) => (
                 <button
                   key={s}
                   type="button"
-                  className="btn font-semibold text-slate-800"
+                  className="btn"
                   onClick={() => navigate(`/news/${s}`)}
                 >
                   {s}
@@ -217,40 +223,51 @@ export default function News() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-6">
+      {/* Broadsheet Section Header */}
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b-2 border-black pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">{view?.profile?.name || sym} news</h1>
-            <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-800">{sym}</span>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">Every article is classified for sentiment, summarised and scanned for entities.</p>
+          <span className="broadsheet-kicker">Financial News Wire · Corporate Intelligence</span>
+          <h1 className="font-serif font-black text-3xl sm:text-4xl text-stone-950 mt-1">
+            {view?.profile?.name || sym} News
+          </h1>
+          <p className="text-xs text-stone-500 font-serif italic mt-0.5">
+            Every published dispatch is scored for sentiment, summarised, and scanned for entities.
+          </p>
         </div>
         <div className="flex gap-2">
           <a className="btn" href={api.exportUrl(sym, "articles")}>
-            <Download className="h-4 w-4 text-slate-500" aria-hidden /> Export CSV
+            <Download className="h-3.5 w-3.5" aria-hidden /> Export CSV
           </a>
           <button className="btn" onClick={refresh} disabled={refreshing || loading}>
-            <RefreshCw className={`h-4 w-4 text-slate-500 ${refreshing ? "animate-spin" : ""}`} aria-hidden /> Refresh
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden /> Refresh
           </button>
         </div>
       </div>
-      {refreshMsg && <p role="alert" className="text-sm font-medium text-amber-700">{refreshMsg}</p>}
 
+      {refreshMsg && <p role="alert" className="text-xs font-serif font-bold text-amber-800">{refreshMsg}</p>}
+
+      {/* NLP Custom Headline Analyzer Tool */}
       <CustomAnalyzer defaultSymbol={sym} />
 
+      {/* Editorial Filter Bar */}
       <FilterBar filters={filters} onChange={onFilters} sources={view?.sources || []} disabled={loading && !view} />
 
-      {loading && !view && <Spinner label="Fetching and analysing news" />}
+      {loading && !view && <Spinner label="Fetching and analysing news dispatches" />}
       {error && <ErrorState error={error} onRetry={reload} title="News is unavailable" />}
+
       {view && !error && (
-        <div className="grid gap-5 lg:grid-cols-3">
-          <div className="space-y-3.5 lg:col-span-2" aria-busy={loading}>
-            <p className="text-xs font-medium text-slate-500" aria-live="polite">
-              Showing {view.articles.length} of {view.total_before_filters} articles
-              {view.providers_used?.length ? ` · via ${view.providers_used.join(", ")}` : ""}
-            </p>
-            {meta?.warnings?.length > 0 && <p className="text-xs font-medium text-amber-700">{meta.warnings.join(" ")}</p>}
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Main Column: Article Listings in Broadsheet Layout */}
+          <div className="space-y-4 lg:col-span-8 lg:border-r lg:border-stone-200 lg:pr-8" aria-busy={loading}>
+            <div className="flex items-center justify-between border-b border-stone-200 pb-2 text-xs font-serif">
+              <span className="text-stone-600" aria-live="polite">
+                Showing <strong>{view.articles.length}</strong> of {view.total_before_filters} articles
+                {view.providers_used?.length ? ` · via ${view.providers_used.join(", ")}` : ""}
+              </span>
+              {meta?.warnings?.length > 0 && <span className="text-xs font-bold text-amber-800">{meta.warnings.join(" ")}</span>}
+            </div>
+
             {view.articles.length === 0 ? (
               <EmptyState
                 title={view.total_before_filters ? "No articles match these filters" : "No relevant articles found"}
@@ -261,18 +278,31 @@ export default function News() {
                   : "No coverage was found for this company in the selected window. Try a longer look-back period or a larger company."}
               </EmptyState>
             ) : (
-              view.articles.map((a) => <ArticleCard key={a.url || a.title} article={a} />)
+              <div className="space-y-4">
+                {view.articles.map((a) => (
+                  <ArticleCard key={a.url || a.title} article={a} />
+                ))}
+              </div>
             )}
           </div>
-          <div className="space-y-5">
+
+          {/* Right Column: Sentiment Score & Donut */}
+          <div className="space-y-6 lg:col-span-4">
             {view.aggregate.n_articles > 0 && (
               <>
-                <Card title="Sentiment score">
+                <div className="border border-stone-200 p-4">
+                  <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
+                    Editorial Sentiment Score
+                  </h3>
                   <SentimentSummary aggregate={view.aggregate} />
-                </Card>
-                <Card title="Sentiment mix">
+                </div>
+
+                <div className="border border-stone-200 p-4">
+                  <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
+                    Sentiment Breakdown
+                  </h3>
                   <SentimentDonut distribution={view.aggregate.distribution} />
-                </Card>
+                </div>
               </>
             )}
           </div>

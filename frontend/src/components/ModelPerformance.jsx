@@ -1,7 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 import { shortDate } from "../format.js";
 
-const AXIS = { fontSize: 11, fill: "#64748B" };
+const AXIS = { fontSize: 10, fill: "#78716c", fontFamily: "sans-serif" };
 const f = (v) => (v === null || v === undefined ? "—" : (v * 100).toFixed(1) + "%");
 
 function rolling(backtest, window = 20) {
@@ -15,29 +15,29 @@ export function ConfusionMatrix({ cm }) {
   const max = Math.max(1, ...cm.matrix.flat());
   return (
     <div>
-      <p className="mb-2 text-xs text-slate-500">Rows: actual outcome. Columns: predicted.</p>
-      <table className="w-full table-fixed border-separate border-spacing-1 text-center text-xs">
+      <p className="mb-2 text-xs text-stone-500 font-serif italic">Rows: actual outcome. Columns: predicted.</p>
+      <table className="w-full table-fixed border-collapse text-center text-xs font-serif">
         <thead>
-          <tr>
+          <tr className="border-b border-black">
             <th className="w-20" />
             {cm.labels.map((l) => (
-              <th key={l} className="font-semibold text-slate-700 py-1">
+              <th key={l} className="font-sans font-bold uppercase text-[10px] text-stone-700 py-1.5">
                 {l}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-stone-100">
           {cm.matrix.map((row, i) => (
             <tr key={cm.labels[i]}>
-              <th scope="row" className="text-right font-semibold text-slate-700 pr-2">
+              <th scope="row" className="text-right font-sans font-bold text-stone-700 pr-2 text-[10px] uppercase">
                 {cm.labels[i]}
               </th>
               {row.map((v, j) => (
                 <td
                   key={j}
-                  className="rounded-lg py-2.5 font-bold text-slate-900 border border-slate-200/50"
-                  style={{ background: `rgba(2, 132, 199, ${(v / max) * 0.35 + 0.05})` }}
+                  className="py-2.5 font-bold text-stone-950 border border-stone-200"
+                  style={{ background: `rgba(28, 25, 23, ${(v / max) * 0.2 + (i === j ? 0.08 : 0.02)})` }}
                 >
                   {v}
                 </td>
@@ -55,38 +55,38 @@ export default function ModelPerformance({ p }) {
   return (
     <div className="space-y-6">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-left text-sm">
+        <table className="w-full min-w-[520px] text-left text-xs font-serif">
           <caption className="sr-only">Model comparison on the held-out test period</caption>
-          <thead className="text-xs text-slate-500 border-b border-slate-200">
+          <thead className="border-b-2 border-black font-sans font-bold uppercase text-[10px] text-stone-700">
             <tr>
-              <th className="py-2 pr-3 font-semibold">Model</th>
-              <th className="px-2 font-semibold">CV F1</th>
-              <th className="px-2 font-semibold">Accuracy</th>
-              <th className="px-2 font-semibold">Precision</th>
-              <th className="px-2 font-semibold">Recall</th>
-              <th className="px-2 font-semibold">F1</th>
+              <th className="py-2 pr-3">Model</th>
+              <th className="px-2">CV F1</th>
+              <th className="px-2">Accuracy</th>
+              <th className="px-2">Precision</th>
+              <th className="px-2">Recall</th>
+              <th className="px-2">F1</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-stone-100">
             {p.comparison.map((c) => (
-              <tr key={c.model} className={c.model === p.model_name ? "bg-blue-50/50" : ""}>
-                <th scope="row" className="py-2.5 pr-3 font-medium text-slate-900">
+              <tr key={c.model} className={c.model === p.model_name ? "bg-stone-50 font-bold" : ""}>
+                <th scope="row" className="py-2.5 pr-3 text-stone-900 font-bold">
                   {c.model}
                   {c.model === p.model_name && (
-                    <span className="ml-2 rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                    <span className="ml-2 border border-black bg-black px-1.5 py-0.2 text-[9px] font-sans font-bold uppercase text-white tracking-wider">
                       selected
                     </span>
                   )}
                 </th>
-                <td className="px-2 text-slate-600 font-medium">{f(c.cv_f1_macro)}</td>
-                <td className="px-2 text-slate-900 font-semibold">{f(c.test.accuracy)}</td>
-                <td className="px-2 text-slate-600">{f(c.test.precision_macro)}</td>
-                <td className="px-2 text-slate-600">{f(c.test.recall_macro)}</td>
-                <td className="px-2 text-slate-600">{f(c.test.f1_macro)}</td>
+                <td className="px-2 text-stone-700">{f(c.cv_f1_macro)}</td>
+                <td className="px-2 text-stone-950 font-bold">{f(c.test.accuracy)}</td>
+                <td className="px-2 text-stone-700">{f(c.test.precision_macro)}</td>
+                <td className="px-2 text-stone-700">{f(c.test.recall_macro)}</td>
+                <td className="px-2 text-stone-700">{f(c.test.f1_macro)}</td>
               </tr>
             ))}
-            <tr className="text-slate-500">
-              <th scope="row" className="py-2.5 pr-3 font-medium text-slate-500">Baseline: most common class</th>
+            <tr className="text-stone-500 font-sans text-[11px]">
+              <th scope="row" className="py-2.5 pr-3 font-normal text-stone-500">Baseline: most common class</th>
               <td className="px-2">—</td>
               <td className="px-2 font-medium">{f(p.baseline.accuracy)}</td>
               <td className="px-2">{f(p.baseline.precision_macro)}</td>
@@ -95,54 +95,60 @@ export default function ModelPerformance({ p }) {
             </tr>
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-slate-500">
-          Scores are macro-averaged over the three classes on {p.n_test} unseen trading days ({p.test_period[0]} to {p.test_period[1]}). CV F1 is walk-forward cross-validation on the training period.
+        <p className="mt-2 text-xs text-stone-500 font-serif italic">
+          Scores are macro-averaged over the three classes on {p.n_test} unseen trading days ({p.test_period[0]} to {p.test_period[1]}). CV F1 represents walk-forward validation across the historical training period.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 pt-2 border-t border-stone-200">
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-slate-900">Confusion matrix (selected model)</h3>
+          <h3 className="mb-2 font-serif font-bold text-sm text-stone-900 border-b border-stone-100 pb-1">
+            Confusion Matrix (Selected Classifier)
+          </h3>
           <ConfusionMatrix cm={p.test_metrics.confusion_matrix} />
         </div>
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-slate-900">Rolling accuracy on unseen days</h3>
+          <h3 className="mb-2 font-serif font-bold text-sm text-stone-900 border-b border-stone-100 pb-1">
+            Rolling Accuracy on Unseen Trading Days
+          </h3>
           <div className="h-44" role="img" aria-label="Rolling 20-day accuracy of the model on the test period">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={roll} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid stroke="#f5f5f4" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="date" tick={AXIS} tickFormatter={shortDate} minTickGap={50} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 1]} tick={AXIS} width={36} tickFormatter={(v) => `${Math.round(v * 100)}%`} axisLine={false} tickLine={false} />
                 <ReferenceLine
                   y={p.baseline.accuracy}
-                  stroke="#D97706"
+                  stroke="#a8a29e"
                   strokeDasharray="4 4"
-                  label={{ value: "baseline", fill: "#D97706", fontSize: 10, position: "insideTopRight" }}
+                  label={{ value: "baseline", fill: "#78716c", fontSize: 10, position: "insideTopRight" }}
                 />
                 <Tooltip
-                  contentStyle={{ background: "#ffffff", border: "1px solid #E2E8F0", borderRadius: 8, boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", fontSize: 12 }}
+                  contentStyle={{ background: "#ffffff", border: "1px solid #1c1917", borderRadius: 0, fontSize: 11 }}
                   formatter={(v) => (v === null ? "—" : `${(v * 100).toFixed(0)}%`)}
                 />
-                <Line dataKey="accuracy" stroke="#0284C7" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false} name="Accuracy" />
+                <Line dataKey="accuracy" stroke="#000000" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false} name="Accuracy" />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 pt-2 border-t border-stone-200">
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-slate-900">Most influential features</h3>
+          <h3 className="mb-2 font-serif font-bold text-sm text-stone-900 border-b border-stone-100 pb-1">
+            Most Influential Features
+          </h3>
           <ul className="space-y-2">
             {p.feature_importance.map((fi) => (
               <li key={fi.feature} className="text-xs">
-                <div className="mb-1 flex justify-between font-medium text-slate-700">
+                <div className="mb-1 flex justify-between font-sans text-stone-700 font-bold text-[11px]">
                   <span>{fi.feature}</span>
-                  <span className="font-semibold text-slate-900">{(fi.importance * 100).toFixed(0)}%</span>
+                  <span className="text-stone-950">{(fi.importance * 100).toFixed(0)}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2 bg-stone-100 overflow-hidden border border-stone-200">
                   <div
-                    className="h-full rounded-full bg-slate-900 transition-all"
+                    className="h-full bg-stone-900 transition-all"
                     style={{ width: `${Math.min(fi.importance * 100 * 2.5, 100)}%` }}
                   />
                 </div>
@@ -150,15 +156,18 @@ export default function ModelPerformance({ p }) {
             ))}
           </ul>
         </div>
-        <div className="space-y-2 text-xs leading-relaxed text-slate-600 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 text-xs leading-relaxed text-stone-700 font-serif border border-stone-200 bg-stone-50/50 p-4">
           <p>
-            <strong className="text-slate-900">Setup.</strong> {p.definition} Trained on {p.n_train} days ({p.train_period[0]} to {p.train_period[1]}) with a {p.horizon_days}-day gap before the test period so no label overlaps it.
+            <strong className="text-stone-950 font-sans uppercase tracking-wider text-[10px] block">Dataset Partitioning:</strong>
+            {p.definition} Trained on {p.n_train} days ({p.train_period[0]} to {p.train_period[1]}) with a {p.horizon_days}-day gap before the test period to eliminate target overlap.
           </p>
           <p>
-            <strong className="text-slate-900">News feature coverage.</strong> {p.sentiment_coverage_pct}% of training days have news sentiment. News APIs only reach back a few weeks, so the sentiment features are mostly empty historically and the model leans on price patterns.
+            <strong className="text-stone-950 font-sans uppercase tracking-wider text-[10px] block">News Sentiment Coverage:</strong>
+            {p.sentiment_coverage_pct}% of training days contain news sentiment. Historic news feeds are sparse beyond recent months, so models naturally rely on technical price action indicators.
           </p>
           <p>
-            <strong className="text-slate-900">Reading these numbers.</strong> Short-term returns are close to random. If accuracy is near the baseline, the model has found little usable signal.
+            <strong className="text-stone-950 font-sans uppercase tracking-wider text-[10px] block">Reading Metrics:</strong>
+            Short-term market returns are heavily stochastic. When model accuracy matches the baseline, it indicates near-random price movements with low predictive predictability.
           </p>
         </div>
       </div>

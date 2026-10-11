@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        serif: ['"Playfair Display"', '"Newsreader"', "Georgia", "Cambria", '"Times New Roman"', "Times", "serif"],
         sans: [
           '"Schibsted Grotesk"',
           "-apple-system",
@@ -59,6 +60,7 @@ export default {
         },
       },
       boxShadow: {
+        "2xs": "0 1px 1px 0 rgba(0, 0, 0, 0.03)",
         xs: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
         panel: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
       },

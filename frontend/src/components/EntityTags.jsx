@@ -1,16 +1,16 @@
 const KIND = {
-  company: "border-blue-200 bg-blue-50 text-blue-700 font-medium",
-  person: "border-purple-200 bg-purple-50 text-purple-700 font-medium",
-  ticker: "border-indigo-200 bg-indigo-50 text-indigo-700 font-medium",
-  figure: "border-amber-200 bg-amber-50 text-amber-800 font-medium",
-  topic: "border-slate-200 bg-slate-100 text-slate-700 font-medium",
+  company: "border border-stone-300 bg-stone-100 text-stone-900 font-bold uppercase text-[10px]",
+  person: "border border-stone-300 bg-stone-100 text-stone-900 font-bold uppercase text-[10px]",
+  ticker: "border border-black bg-stone-900 text-white font-bold uppercase text-[10px]",
+  figure: "border border-amber-300 bg-amber-50 text-amber-950 font-bold uppercase text-[10px]",
+  topic: "border border-stone-300 bg-white text-stone-800 font-serif text-[11px]",
 };
 
 function Group({ label, children }) {
   if (!children || children.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="w-20 shrink-0 text-xs font-medium text-slate-500">{label}</span>
+      <span className="w-20 shrink-0 text-[10px] font-bold uppercase tracking-wider text-stone-500 font-sans">{label}</span>
       <div className="flex flex-wrap items-center gap-1.5">{children}</div>
     </div>
   );
@@ -27,16 +27,16 @@ export default function EntityTags({ entities }) {
     !entities.tickers?.length &&
     !figures.length &&
     !entities.topics?.length;
-  if (nothing) return <p className="text-xs text-slate-400">No entities were recognised in this article.</p>;
+  if (nothing) return <p className="text-xs text-stone-400 font-serif italic">No entities were recognised in this article.</p>;
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       <Group label="Companies">{entities.companies?.map((c) => <Tag key={c} kind="company">{c}</Tag>)}</Group>
       <Group label="People">{entities.people?.map((c) => <Tag key={c} kind="person">{c}</Tag>)}</Group>
       <Group label="Tickers">{entities.tickers?.map((c) => <Tag key={c} kind="ticker">{c}</Tag>)}</Group>
       <Group label="Figures">
         {figures.map((f, i) => (
           <Tag key={i} kind="figure">
-            {f.text}<span className="text-amber-600/80"> · {f.context || "unlabelled"}</span>
+            {f.text}<span className="text-amber-800"> · {f.context || "unlabelled"}</span>
           </Tag>
         ))}
       </Group>

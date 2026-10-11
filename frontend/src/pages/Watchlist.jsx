@@ -49,16 +49,24 @@ export default function Watchlist() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-8">
+      {/* Broadsheet Section Header */}
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b-2 border-black pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Watchlist</h1>
-          <p className="mt-1 text-sm text-slate-500">Track and monitor your selected stocks and quick-export their data.</p>
+          <span className="broadsheet-kicker">Personal Market Ledger · Tracked Equities</span>
+          <h1 className="font-serif font-black text-3xl sm:text-4xl text-stone-950 mt-1">
+            Watchlist
+          </h1>
+          <p className="text-xs text-stone-500 font-serif italic mt-0.5">
+            Monitor selected equities, track latest closing levels, and export sentiment records.
+          </p>
         </div>
+
+        {/* Quick Add Form */}
         <form onSubmit={handleAddTicker} className="flex items-center gap-2">
           <input
             type="text"
-            className="input !py-1.5 w-44 text-xs uppercase"
+            className="input !py-1 w-44 text-xs uppercase"
             placeholder="Add ticker (e.g. AAPL)"
             value={tickerInput}
             onChange={(e) => setTickerInput(e.target.value)}
@@ -66,84 +74,119 @@ export default function Watchlist() {
           <button
             type="submit"
             disabled={adding || !tickerInput.trim()}
-            className="btn btn-primary !py-1.5 !px-3 text-xs"
+            className="btn btn-primary !py-1 !px-3 text-xs"
           >
-            <Plus className="h-3.5 w-3.5" aria-hidden /> Add
+            <Plus className="h-3.5 w-3.5" aria-hidden /> Add Ticker
           </button>
         </form>
       </div>
 
-      {msg && <p role="alert" className="text-sm font-medium text-amber-700">{msg}</p>}
+      {msg && <p role="alert" className="text-xs font-serif font-bold text-amber-800">{msg}</p>}
 
-      <Card title="Saved companies" subtitle="Latest close and daily change">
-        {wl.loading && <Spinner label="Loading watchlist" />}
+      {/* Saved Companies Broadsheet Table */}
+      <div className="border border-stone-200 p-5 bg-white">
+        <h3 className="font-serif font-bold text-lg text-stone-900 border-b border-black pb-2 mb-4">
+          Saved Companies & Current Close
+        </h3>
+
+        {wl.loading && <Spinner label="Loading portfolio watchlist ledger" />}
         {wl.error && <ErrorState error={wl.error} onRetry={wl.reload} />}
+
         {wl.data && wl.data.length === 0 && (
           <EmptyState title="Your watchlist is empty">
             Open any company's dashboard and choose “Add to watchlist” to track it here, or use the quick-add input above.
           </EmptyState>
         )}
-        {wl.data?.length > 0 && (
-          <ul className="divide-y divide-slate-100">
-            {wl.data.map((w) => (
-              <li key={w.symbol} className="flex flex-wrap items-center gap-3 py-3.5 transition-colors hover:bg-slate-50/50 px-2 rounded-lg">
-                <Link to={`/stock/${w.symbol}`} className="min-w-0 flex-1 hover:text-blue-600">
-                  <p className="truncate text-sm font-semibold text-slate-900">{w.name}</p>
-                  <p className="text-xs text-slate-500">
-                    <span className="font-semibold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{w.symbol}</span>
-                    {w.exchange ? ` · ${w.exchange}` : ""}
-                  </p>
-                </Link>
-                {w.quote ? (
-                  <div className="text-right text-sm">
-                    <p className="font-semibold text-slate-900">{money(w.quote.price)}</p>
-                    <p className={`text-xs font-medium ${changeColor(w.quote.change)}`}>{pct(w.quote.change_pct)}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs font-medium text-amber-700">Price unavailable</p>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <a
-                    className="btn !px-2.5 !py-1.5 text-slate-600 hover:text-slate-900"
-                    href={api.exportUrl(w.symbol, "articles")}
-                    aria-label={`Export ${w.symbol} articles as CSV`}
-                    title="Export analysed articles"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
-                  <button
-                    className="btn !px-2.5 !py-1.5 text-slate-400 hover:text-rose-600 hover:border-rose-300"
-                    onClick={() => remove(w.symbol)}
-                    aria-label={`Remove ${w.symbol} from watchlist`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
 
-      <Card
-        title="Recently searched"
-        action={
-          hist.data?.length > 0 && (
-            <button className="text-xs font-medium text-slate-500 hover:text-slate-900" onClick={clear}>
+        {wl.data?.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm font-serif">
+              <thead className="border-b border-black font-sans font-bold uppercase text-[10px] text-stone-600">
+                <tr>
+                  <th className="py-2.5">Corporation</th>
+                  <th>Ticker</th>
+                  <th className="text-right">Price</th>
+                  <th className="text-right">Session Change</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {wl.data.map((w) => (
+                  <tr key={w.symbol} className="hover:bg-stone-50/70 transition-colors">
+                    <td className="py-3.5">
+                      <Link to={`/stock/${w.symbol}`} className="font-bold text-stone-950 hover:underline">
+                        {w.name}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className="font-sans font-bold text-xs bg-stone-100 px-1.5 py-0.5 border border-stone-200 text-stone-800">
+                        {w.symbol}
+                      </span>
+                      {w.exchange ? <span className="ml-1 text-xs text-stone-500 font-sans">({w.exchange})</span> : ""}
+                    </td>
+                    <td className="text-right font-sans font-bold text-stone-900">
+                      {w.quote ? money(w.quote.price) : <span className="text-xs text-amber-800">Price unavailable</span>}
+                    </td>
+                    <td className="text-right font-sans font-bold">
+                      {w.quote ? (
+                        <span className={changeColor(w.quote.change)}>{pct(w.quote.change_pct)}</span>
+                      ) : (
+                        <span className="text-xs text-stone-400">—</span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-1 font-sans">
+                        <a
+                          className="btn !px-2 !py-1 text-stone-700 hover:text-black"
+                          href={api.exportUrl(w.symbol, "articles")}
+                          aria-label={`Export ${w.symbol} articles as CSV`}
+                          title="Export analysed articles as CSV"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                        <button
+                          className="btn !px-2 !py-1 text-stone-400 hover:text-rose-700 hover:border-rose-400"
+                          onClick={() => remove(w.symbol)}
+                          aria-label={`Remove ${w.symbol} from watchlist`}
+                          title="Remove from watchlist"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Recently Searched Ledger */}
+      <div className="border border-stone-200 p-5 bg-white">
+        <div className="flex items-baseline justify-between border-b border-stone-200 pb-2 mb-4">
+          <h3 className="font-serif font-bold text-base text-stone-900">
+            Recently Searched Companies
+          </h3>
+          {hist.data?.length > 0 && (
+            <button
+              className="font-sans text-[11px] font-bold uppercase tracking-wider text-stone-500 hover:text-black hover:underline"
+              onClick={clear}
+            >
               Clear history
             </button>
-          )
-        }
-      >
-        {hist.data?.length === 0 && <p className="text-sm text-slate-400">Companies you open will appear here.</p>}
+          )}
+        </div>
+
+        {hist.data?.length === 0 && <p className="text-xs text-stone-400 font-serif italic">Companies you open will appear here.</p>}
         <div className="flex flex-wrap gap-2">
           {hist.data?.map((h) => (
-            <Link key={h.symbol} className="btn font-semibold text-slate-800" to={`/stock/${h.symbol}`}>
+            <Link key={h.symbol} className="btn" to={`/stock/${h.symbol}`}>
               {h.symbol}
             </Link>
           ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
