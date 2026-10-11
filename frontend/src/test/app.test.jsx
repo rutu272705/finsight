@@ -166,11 +166,28 @@ describe("Components", () => {
     expect(onSelect).toHaveBeenCalledWith("TCS.NS");
   });
 
+  it("waits for company suggestions instead of submitting a name as a ticker", async () => {
+    let resolveSearch;
+    api.search.mockReturnValue(new Promise((resolve) => { resolveSearch = resolve; }));
+    const onSelect = vi.fn();
+    render(<SearchBar onSelect={onSelect} />);
+    const input = screen.getByLabelText(/search for a company/i);
+    await userEvent.type(input, "Tesla");
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(api.search).toHaveBeenCalled());
+    resolveSearch({ data: [{ symbol: "TSLA", name: "Tesla, Inc.", exchange: "NASDAQ" }], warnings: [] });
+    expect(await screen.findByRole("option", { name: /tesla/i })).toBeInTheDocument();
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenCalledWith("TSLA");
+  });
+
   it("search bar still accepts a typed ticker when search fails", async () => {
     api.search.mockImplementation(() => Promise.reject(new ApiError("down")));
     const onSelect = vi.fn();
     render(<SearchBar onSelect={onSelect} />);
-    await userEvent.type(screen.getByLabelText(/search for a company/i), "tsla{Enter}");
+    await userEvent.type(screen.getByLabelText(/search for a company/i), "TSLA{Enter}");
     expect(onSelect).toHaveBeenCalledWith("TSLA");
   });
 });

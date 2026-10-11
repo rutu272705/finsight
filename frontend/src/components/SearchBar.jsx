@@ -9,6 +9,7 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
   const [open, setOpen] = useState(false);
   const [warn, setWarn] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const boxRef = useRef(null);
 
   useEffect(() => {
@@ -16,11 +17,16 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
     if (q.length < 1) {
       setResults([]);
       setWarn("");
+      setLoading(false);
+      setActiveIndex(-1);
       return undefined;
     }
     const ctrl = new AbortController();
+    setResults([]);
+    setWarn("");
+    setLoading(true);
+    setOpen(true);
     const t = setTimeout(() => {
-      setLoading(true);
       api
         .search(q, ctrl.signal)
         .then((r) => {
@@ -28,8 +34,13 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
           setWarn(r.warnings?.[0] || "");
           setOpen(true);
         })
-        .catch((e) => e.name !== "AbortError" && setResults([]))
-        .finally(() => setLoading(false));
+        .catch((e) => {
+          if (e.name !== "AbortError") {
+            setResults([]);
+            setWarn("Company suggestions are unavailable. You can still search by ticker.");
+          }
+        })
+        .finally(() => !ctrl.signal.aborted && setLoading(false));
     }, 250);
     return () => {
       clearTimeout(t);
@@ -52,13 +63,15 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
     e.preventDefault();
     const q = text.trim();
     if (!q) return;
-    // exact-looking ticker goes straight through; otherwise use the best match
-    if (/^[A-Za-z0-9.\-^=]{1,20}$/.test(q) && (!results.length || results.some((r) => r.symbol === q.toUpperCase()))) {
+    const exactMatch = results.find((result) => result.symbol === q.toUpperCase());
+    if (exactMatch) {
+      choose(exactMatch.symbol);
+    } else if (results.length) {
+      choose(results[activeIndex]?.symbol || results[0].symbol);
+    } else if (/^[A-Z0-9.\-^=]{1,20}$/.test(q)) {
       choose(q);
-    } else if (results[0]) {
-      choose(results[0].symbol);
     } else {
-      choose(q);
+      setOpen(true);
     }
   };
 
@@ -71,24 +84,49 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
           id="company-search"
           className="input pl-8 text-xs font-sans"
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          onFocus={() => results.length && setOpen(true)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setOpen(true);
+            setActiveIndex(-1);
+          }}
+          onFocus={() => (text || results.length) && setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setOpen(false);
+            if (e.key === "ArrowDown" && results.length) {
+              e.preventDefault();
+              setActiveIndex((index) => Math.min(index + 1, results.length - 1));
+              setOpen(true);
+            }
+            if (e.key === "ArrowUp" && results.length) {
+              e.preventDefault();
+              setActiveIndex((index) => Math.max(index - 1, 0));
+              setOpen(true);
+            }
+          }}
           placeholder={placeholder}
           autoComplete="off"
           aria-autocomplete="list"
           aria-expanded={open}
+          aria-controls="company-search-results"
+          aria-activedescendant={activeIndex >= 0 ? `company-option-${activeIndex}` : undefined}
+          aria-busy={loading}
         />
       </form>
-      {open && (results.length > 0 || warn) && (
+      {open && (loading || results.length > 0 || warn || text.trim()) && (
         <div className="absolute z-40 mt-1 w-full border border-black bg-white shadow-lg">
           {warn && <p className="border-b border-stone-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-900">{warn}</p>}
-          <ul role="listbox" className="divide-y divide-stone-100 max-h-72 overflow-y-auto">
+          {loading && <p role="status" className="px-3 py-2 text-xs text-stone-500">Searching companies...</p>}
+          {!loading && results.length === 0 && text.trim() && (
+            <p className="px-3 py-2 text-xs text-stone-600">No company matches. Try another name or enter a ticker symbol.</p>
+          )}
+          <ul id="company-search-results" role="listbox" className="divide-y divide-stone-100 max-h-72 overflow-y-auto">
             {results.map((r) => (
-              <li key={r.symbol}>
+              <li key={r.symbol} id={`company-option-${results.indexOf(r)}`}>
                 <button
                   type="button"
                   role="option"
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs transition-colors hover:bg-stone-100 font-serif"
+                  aria-selected={activeIndex === results.indexOf(r)}
+                  className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs transition-colors hover:bg-stone-100 font-serif ${activeIndex === results.indexOf(r) ? "bg-stone-100" : ""}`}
                   onClick={() => choose(r.symbol)}
                 >
                   <span className="min-w-0 truncate font-bold text-stone-900">{r.name}</span>
@@ -102,7 +140,6 @@ export default function SearchBar({ onSelect, placeholder = "Search company or t
           </ul>
         </div>
       )}
-      {loading && <span className="sr-only">Searching</span>}
     </div>
   );
 }
