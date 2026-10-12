@@ -90,13 +90,6 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
               FinSight
             </h1>
           </Link>
-          <div className="mt-2 flex items-center justify-center gap-3 text-[10px] sm:text-xs font-serif italic text-stone-600">
-            <span className="hidden h-[1px] w-12 bg-stone-300 sm:inline-block" />
-            <span className="uppercase tracking-widest font-sans font-bold text-stone-500 text-[10px]">
-              Financial News Sentiment · Natural Language Processing · 5-Session Trend Forecasts
-            </span>
-            <span className="hidden h-[1px] w-12 bg-stone-300 sm:inline-block" />
-          </div>
         </div>
       </div>
 

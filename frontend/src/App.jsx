@@ -19,13 +19,6 @@ export default function App() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [health, setHealth] = useState(null);
-  const [lastSymbol, setLastSymbol] = useState(() => {
-    try {
-      return localStorage.getItem("finsight:last") || "";
-    } catch {
-      return "";
-    }
-  });
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -34,24 +27,16 @@ export default function App() {
   }, []);
 
   const [section, routeSymbol] = pathname.split("/").filter(Boolean);
-  useEffect(() => {
-    if (SECTIONS.includes(section) && routeSymbol) {
-      const s = decodeURIComponent(routeSymbol).toUpperCase();
-      setLastSymbol(s);
-      try {
-        localStorage.setItem("finsight:last", s);
-      } catch {
-        /* storage unavailable */
-      }
-    }
-  }, [section, routeSymbol]);
+  const activeSymbol = SECTIONS.includes(section) && routeSymbol
+    ? decodeURIComponent(routeSymbol).toUpperCase()
+    : "";
 
   const go = (sym) => navigate(`/${SECTIONS.includes(section) ? section : "stock"}/${encodeURIComponent(sym)}`);
 
   return (
     <div className="min-h-full bg-white text-stone-900 flex flex-col">
       {health?.demo_mode && <DemoBanner />}
-      <BroadsheetHeader symbol={lastSymbol} health={health} onSelect={go} />
+      <BroadsheetHeader symbol={activeSymbol} health={health} onSelect={go} />
       
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 md:py-8">
         <Suspense fallback={<div role="status" className="flex min-h-[40vh] items-center justify-center text-xs text-stone-500">Loading section...</div>}>
@@ -71,7 +56,7 @@ export default function App() {
 
       <BroadsheetFooter />
       {/* Mobile navigation bar */}
-      <Sidebar symbol={lastSymbol} health={health} />
+      <Sidebar symbol={activeSymbol} health={health} />
       <BackToTop />
     </div>
   );

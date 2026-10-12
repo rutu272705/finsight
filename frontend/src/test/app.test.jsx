@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, api } from "../api.js";
+import App from "../App.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import News from "../pages/News.jsx";
 import Watchlist from "../pages/Watchlist.jsx";
@@ -22,7 +23,45 @@ const at = (path, ui, route = "/stock/:symbol") =>
   render(<MemoryRouter initialEntries={[path]}><Routes><Route path={route} element={ui} /></Routes></MemoryRouter>);
 const ok = (data, extra = {}) => Promise.resolve({ data, demo: false, warnings: [], ...extra });
 
-beforeEach(() => { vi.clearAllMocks(); api.history.mockReturnValue(ok([])); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  api.history.mockReturnValue(ok([]));
+  api.health.mockReturnValue(ok({ demo_mode: false, sentiment_backend: "test" }));
+});
+
+describe("App navigation", () => {
+  it("opens the general news page from Home even when a previous ticker was saved", async () => {
+    localStorage.setItem("finsight:last", "AAPL");
+    render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);
+
+    const marketNews = await screen.findByRole("link", { name: "Market News" });
+    expect(marketNews).toHaveAttribute("href", "/news");
+    await userEvent.click(marketNews);
+
+    expect(await screen.findByText(/pick a company first/i)).toBeInTheDocument();
+  });
+
+  it("opens the selected company's news from its dashboard", async () => {
+    api.dashboard.mockReturnValue(ok(dashboard()));
+    api.news.mockReturnValue(ok({
+      symbol: "AAPL",
+      profile: { name: "Apple Inc." },
+      articles: [],
+      total_before_filters: 0,
+      sources: [],
+      providers_used: [],
+      aggregate: dashboard().news.aggregate,
+      topics: {},
+    }));
+    render(<MemoryRouter initialEntries={["/stock/AAPL"]}><App /></MemoryRouter>);
+
+    const marketNews = await screen.findByRole("link", { name: "Market News" });
+    expect(marketNews).toHaveAttribute("href", "/news/AAPL");
+    await userEvent.click(marketNews);
+
+    expect(await screen.findByRole("heading", { name: "Apple Inc. News" })).toBeInTheDocument();
+  });
+});
 
 describe("Dashboard", () => {
   it("shows a loading state, then the company, price, sentiment and forecast", async () => {
