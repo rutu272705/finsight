@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
+import { House } from "lucide-react";
 import SearchBar from "./SearchBar.jsx";
 import { NAV_ITEMS } from "./Sidebar.jsx";
 import { api } from "../api.js";
@@ -129,16 +129,17 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
       <div className="sticky top-0 z-30 border-b-2 border-black bg-white/95 backdrop-blur shadow-2xs">
         <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6">
           <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
-            <nav aria-label="Main Navigation" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-wider text-stone-800 md:justify-start lg:flex-nowrap lg:gap-x-4 xl:gap-x-5">
+            <nav aria-label="Main Navigation" className="flex flex-wrap items-center justify-center gap-1 rounded-xl border border-stone-200 bg-stone-50 p-1 text-xs font-semibold text-stone-700 md:justify-start lg:flex-nowrap">
               <NavLink
                 to="/"
                 end
                 className={({ isActive }) =>
-                  `transition-colors hover:text-black py-1 border-b-2 ${
-                    isActive ? "border-black text-black" : "border-transparent text-stone-600"
+                  `inline-flex min-h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+                    isActive ? "bg-stone-950 text-white shadow-sm" : "text-stone-600 hover:bg-white hover:text-stone-950"
                   }`
                 }
               >
+                <House className="h-4 w-4" aria-hidden="true" />
                 Home
               </NavLink>
               {NAV_ITEMS.filter((it) => it.to(symbol) && !(it.label === "Dashboard" && pathname === "/")).map((it) => (
@@ -147,11 +148,12 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
                   to={it.to(symbol)}
                   end={it.end}
                   className={({ isActive }) =>
-                    `transition-colors hover:text-black py-1 border-b-2 ${
-                      isActive ? "border-black text-black" : "border-transparent text-stone-600"
+                    `inline-flex min-h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+                      isActive ? "bg-stone-950 text-white shadow-sm" : "text-stone-600 hover:bg-white hover:text-stone-950"
                     }`
                   }
                 >
+                  <it.icon className="h-4 w-4" aria-hidden="true" />
                   {it.label}
                 </NavLink>
               ))}

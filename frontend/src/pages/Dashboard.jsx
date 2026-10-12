@@ -8,7 +8,6 @@ import { Card, DashboardSkeleton, EmptyState, ErrorState, Unavailable, Disclaime
 import PredictionCard from "../components/PredictionCard.jsx";
 import { SentimentSummary } from "../components/SentimentPanels.jsx";
 import TopicBars from "../components/TopicBars.jsx";
-import ArticleCard from "../components/ArticleCard.jsx";
 
 const PriceChart = lazy(() => import("../components/PriceChart.jsx"));
 const SentimentDonut = lazy(() => import("../components/SentimentDonut.jsx"));
@@ -260,7 +259,6 @@ export default function Dashboard({ onPick }) {
 
   const news = d.news;
   const newsDown = news.unavailable;
-  const articles = newsDown ? [] : news.articles;
 
   return (
     <div className="space-y-8">
@@ -312,10 +310,16 @@ export default function Dashboard({ onPick }) {
           </h2>
 
           {newsDown ? (
-            <div className="border border-stone-200 p-4 text-center">
-              <p className="text-xs text-stone-500 font-serif italic">
-                Sentiment feed suspended while upstream dispatches are unavailable.
+            <Unavailable what="News and sentiment" reason={news.reason} />
+          ) : news.articles.length === 0 ? (
+            <div className="border border-stone-200 p-4">
+              <p className="font-serif text-sm font-bold text-stone-900">No relevant news found</p>
+              <p className="mt-1 text-xs leading-relaxed text-stone-600">
+                No articles about {d.profile.name} were found in the selected window.
               </p>
+              <Link to={`/news/${sym}`} className="mt-3 inline-flex text-xs font-bold text-stone-900 underline underline-offset-2 hover:text-stone-600">
+                View Market News
+              </Link>
             </div>
           ) : (
             <>
@@ -355,35 +359,6 @@ export default function Dashboard({ onPick }) {
             </>
           )}
         </div>
-      </div>
-
-      {/* Lower Section: Featured Stories (Full-Width 3-Column Grid Referenced From Image) */}
-      <div className="border-t-2 border-black pt-6">
-        <div className="flex items-center justify-between mb-6 border-b border-stone-200 pb-2">
-          <h2 className="font-serif italic font-black text-2xl sm:text-3xl text-stone-950">
-            Featured Stories & Corporate News Coverage
-          </h2>
-          <Link to={`/news/${sym}`} className="text-xs font-bold uppercase tracking-wider text-stone-900 hover:underline">
-            All Articles & Filters →
-          </Link>
-        </div>
-
-        {newsDown ? (
-          <Unavailable what="News and sentiment" reason={news.reason} />
-        ) : articles.length === 0 ? (
-          <EmptyState
-            title="No relevant news found"
-            action={<Link to={`/news/${sym}`} className="btn mt-3">Widen the date range</Link>}
-          >
-            No articles about {d.profile.name} were found in the last 14 days. Smaller companies are often not covered by free news feeds. Price and trend data above are unaffected.
-          </EmptyState>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {articles.slice(0, 6).map((a) => (
-              <ArticleCard key={a.url || a.title} article={a} />
-            ))}
-          </div>
-        )}
       </div>
 
       <Disclaimer>

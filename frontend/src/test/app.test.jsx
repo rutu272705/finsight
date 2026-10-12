@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +11,7 @@ import ArticleCard from "../components/ArticleCard.jsx";
 import PredictionCard from "../components/PredictionCard.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import BroadsheetHeader from "../components/BroadsheetHeader.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 import { article, dashboard } from "./fixtures.js";
 
 vi.mock("../api.js", async (orig) => {
@@ -34,7 +35,7 @@ describe("App navigation", () => {
     localStorage.setItem("finsight:last", "AAPL");
     render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);
 
-    const marketNews = await screen.findByRole("link", { name: "Market News" });
+    const marketNews = await within(screen.getByRole("navigation", { name: "Main Navigation" })).findByRole("link", { name: "Market News" });
     expect(marketNews).toHaveAttribute("href", "/news");
     await userEvent.click(marketNews);
 
@@ -55,7 +56,7 @@ describe("App navigation", () => {
     }));
     render(<MemoryRouter initialEntries={["/stock/AAPL"]}><App /></MemoryRouter>);
 
-    const marketNews = await screen.findByRole("link", { name: "Market News" });
+    const marketNews = await within(screen.getByRole("navigation", { name: "Main Navigation" })).findByRole("link", { name: "Market News" });
     expect(marketNews).toHaveAttribute("href", "/news/AAPL");
     await userEvent.click(marketNews);
 
@@ -69,6 +70,7 @@ describe("Dashboard", () => {
     at("/stock/AAPL", <Dashboard onPick={() => {}} />);
     expect(screen.getByRole("status", { name: /loading dashboard/i })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Apple Inc." })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /featured stories & corporate news coverage/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Latest price")).toHaveTextContent("$129.00");
     expect(screen.getByText(/next 5 trading sessions/i)).toBeInTheDocument();
     expect(screen.getAllByText("Upward").length).toBeGreaterThan(0);
@@ -144,7 +146,9 @@ describe("News page", () => {
   it("lists articles and passes filters to the API", async () => {
     api.news.mockImplementation(() => ok(payload([article()])));
     at("/news/AAPL", <News />, "/news/:symbol");
-    expect(await screen.findByText("Apple beats earnings estimates")).toBeInTheDocument();
+    expect((await screen.findAllByText("Apple beats earnings estimates")).length).toBeGreaterThan(1);
+    expect(screen.getByRole("heading", { name: /featured stories & corporate news coverage/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /all articles & filters/i })).toHaveAttribute("href", "#all-articles");
     await userEvent.selectOptions(screen.getByLabelText("Sentiment"), "negative");
     await waitFor(() => expect(api.news).toHaveBeenLastCalledWith("AAPL", expect.objectContaining({ sentiment: "negative" }), expect.anything()));
   });
@@ -176,10 +180,18 @@ describe("Components", () => {
     const home = render(<MemoryRouter initialEntries={["/"]}><BroadsheetHeader symbol="AAPL" onSelect={() => {}} /></MemoryRouter>);
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("navigation", { name: "Main Navigation" })).getByRole("link", { name: "Analytics" })).toHaveAttribute("href", "/analytics/AAPL");
     home.unmount();
 
     render(<MemoryRouter initialEntries={["/stock/AAPL"]}><BroadsheetHeader symbol="AAPL" onSelect={() => {}} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/stock/AAPL"));
+  });
+
+  it("uses clear full labels and marks the active section in mobile navigation", () => {
+    render(<MemoryRouter initialEntries={["/news/AAPL"]}><Sidebar symbol="AAPL" /></MemoryRouter>);
+    const mobileNav = screen.getByRole("navigation", { name: "Mobile Navigation" });
+    expect(within(mobileNav).getByRole("link", { name: "Market News" })).toHaveAttribute("aria-current", "page");
+    expect(within(mobileNav).getByRole("link", { name: "Analytics" })).toHaveAttribute("href", "/analytics/AAPL");
   });
 
   it("shows fetched prices and daily percentages beside quick-pick tickers", async () => {

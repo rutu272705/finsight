@@ -248,67 +248,92 @@ export default function News() {
 
       {refreshMsg && <p role="alert" className="text-xs font-serif font-bold text-amber-800">{refreshMsg}</p>}
 
+      {view && !error && view.articles.length > 0 && (
+        <section aria-labelledby="featured-stories-heading" className="border-t-2 border-black pt-5">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-stone-200 pb-2">
+            <h2 id="featured-stories-heading" className="font-serif text-2xl font-black italic text-stone-950 sm:text-3xl">
+              Featured Stories &amp; Corporate News Coverage
+            </h2>
+            <a href="#all-articles" className="text-xs font-bold uppercase tracking-wider text-stone-900 hover:underline">
+              All articles &amp; filters ↓
+            </a>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {view.articles.slice(0, 3).map((a) => (
+              <ArticleCard key={a.url || a.title} article={a} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* NLP Custom Headline Analyzer Tool */}
       <CustomAnalyzer defaultSymbol={sym} />
 
-      {/* Editorial Filter Bar */}
-      <FilterBar filters={filters} onChange={onFilters} sources={view?.sources || []} disabled={loading && !view} />
+      <section id="all-articles" aria-labelledby="all-articles-heading" className="scroll-mt-36 space-y-4">
+        <div>
+          <h2 id="all-articles-heading" className="font-serif text-xl font-bold text-stone-950">
+            All articles &amp; filters
+          </h2>
+          <p className="mt-1 text-xs text-stone-600">Narrow coverage by sentiment, source, date, or look-back period.</p>
+        </div>
+        <FilterBar filters={filters} onChange={onFilters} sources={view?.sources || []} disabled={loading && !view} />
 
-      {loading && !view && <Spinner label="Fetching and analysing news dispatches" />}
-      {error && <ErrorState error={error} onRetry={reload} title="News is unavailable" />}
+        {loading && !view && <Spinner label="Fetching and analysing news dispatches" />}
+        {error && <ErrorState error={error} onRetry={reload} title="News is unavailable" />}
 
-      {view && !error && (
-        <div className="grid gap-8 lg:grid-cols-12">
-          {/* Main Column: Article Listings in Broadsheet Layout */}
-          <div className="space-y-4 lg:col-span-8 lg:border-r lg:border-stone-200 lg:pr-8" aria-busy={loading}>
-            <div className="flex items-center justify-between border-b border-stone-200 pb-2 text-xs font-serif">
-              <span className="text-stone-600" aria-live="polite">
-                Showing <strong>{view.articles.length}</strong> of {view.total_before_filters} articles
-                {view.providers_used?.length ? ` · via ${view.providers_used.join(", ")}` : ""}
-              </span>
-              {meta?.warnings?.length > 0 && <span className="text-xs font-bold text-amber-800">{meta.warnings.join(" ")}</span>}
+        {view && !error && (
+          <div className="grid gap-8 lg:grid-cols-12">
+            {/* Main Column: Article Listings in Broadsheet Layout */}
+            <div className="space-y-4 lg:col-span-8 lg:border-r lg:border-stone-200 lg:pr-8" aria-busy={loading}>
+              <div className="flex items-center justify-between border-b border-stone-200 pb-2 text-xs font-serif">
+                <span className="text-stone-600" aria-live="polite">
+                  Showing <strong>{view.articles.length}</strong> of {view.total_before_filters} articles
+                  {view.providers_used?.length ? ` · via ${view.providers_used.join(", ")}` : ""}
+                </span>
+                {meta?.warnings?.length > 0 && <span className="text-xs font-bold text-amber-800">{meta.warnings.join(" ")}</span>}
+              </div>
+
+              {view.articles.length === 0 ? (
+                <EmptyState
+                  title={view.total_before_filters ? "No articles match these filters" : "No relevant articles found"}
+                  action={view.total_before_filters ? <button className="btn mt-3" onClick={() => onFilters(BLANK)}>Clear filters</button> : null}
+                >
+                  {view.total_before_filters
+                    ? "Loosen the sentiment, source or date filters to see more."
+                    : "No coverage was found for this company in the selected window. Try a longer look-back period or a larger company."}
+                </EmptyState>
+              ) : (
+                <div className="space-y-4">
+                  {view.articles.map((a) => (
+                    <ArticleCard key={a.url || a.title} article={a} />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {view.articles.length === 0 ? (
-              <EmptyState
-                title={view.total_before_filters ? "No articles match these filters" : "No relevant articles found"}
-                action={view.total_before_filters ? <button className="btn mt-3" onClick={() => onFilters(BLANK)}>Clear filters</button> : null}
-              >
-                {view.total_before_filters
-                  ? "Loosen the sentiment, source or date filters to see more."
-                  : "No coverage was found for this company in the selected window. Try a longer look-back period or a larger company."}
-              </EmptyState>
-            ) : (
-              <div className="space-y-4">
-                {view.articles.map((a) => (
-                  <ArticleCard key={a.url || a.title} article={a} />
-                ))}
-              </div>
-            )}
-          </div>
+            {/* Right Column: Sentiment Score & Donut */}
+            <div className="space-y-6 lg:col-span-4">
+              {view.aggregate.n_articles > 0 && (
+                <>
+                  <div className="border border-stone-200 p-4">
+                    <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
+                      Editorial Sentiment Score
+                    </h3>
+                    <SentimentSummary aggregate={view.aggregate} />
+                  </div>
 
-          {/* Right Column: Sentiment Score & Donut */}
-          <div className="space-y-6 lg:col-span-4">
-            {view.aggregate.n_articles > 0 && (
-              <>
-                <div className="border border-stone-200 p-4">
-                  <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
-                    Editorial Sentiment Score
-                  </h3>
-                  <SentimentSummary aggregate={view.aggregate} />
-                </div>
-
-                <div className="border border-stone-200 p-4">
-                  <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
-                    Sentiment Breakdown
-                  </h3>
-                  <SentimentDonut distribution={view.aggregate.distribution} />
-                </div>
-              </>
-            )}
+                  <div className="border border-stone-200 p-4">
+                    <h3 className="font-serif font-bold text-sm text-stone-900 mb-2 border-b border-stone-100 pb-1">
+                      Sentiment Breakdown
+                    </h3>
+                    <SentimentDonut distribution={view.aggregate.distribution} />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   );
 }
