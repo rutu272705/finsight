@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { TrendingUp, TrendingDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import SearchBar from "./SearchBar.jsx";
 import { NAV_ITEMS } from "./Sidebar.jsx";
+import { api } from "../api.js";
+import { changeColor, money, pct } from "../format.js";
 
 const TICKER_RIBBON = [
-  { sym: "AAPL", name: "Apple", price: "$129.00", chg: "+0.78%", up: true },
-  { sym: "NVDA", name: "NVIDIA", price: "$124.50", chg: "+2.14%", up: true },
-  { sym: "TSLA", name: "Tesla", price: "$248.80", chg: "-0.80%", up: false },
-  { sym: "RELIANCE.NS", name: "Reliance", price: "₹2,945", chg: "+0.45%", up: true },
-  { sym: "TCS.NS", name: "TCS", price: "₹4,215", chg: "-0.22%", up: false },
-  { sym: "INFY.NS", name: "Infosys", price: "₹1,890", chg: "+1.10%", up: true },
+  { sym: "AAPL", name: "Apple" },
+  { sym: "NVDA", name: "NVIDIA" },
+  { sym: "TSLA", name: "Tesla" },
+  { sym: "RELIANCE.NS", name: "Reliance" },
+  { sym: "TCS.NS", name: "TCS" },
+  { sym: "INFY.NS", name: "Infosys" },
 ];
 
 export default function BroadsheetHeader({ symbol, health, onSelect }) {
   const [currentDate, setCurrentDate] = useState("");
+  const [quotes, setQuotes] = useState({});
 
   useEffect(() => {
     const now = new Date();
@@ -25,6 +28,28 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
       day: "numeric",
     });
     setCurrentDate(formatted);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    Promise.all(
+      TICKER_RIBBON.map(async ({ sym }) => {
+        try {
+          const response = await api.stock(sym, "1mo", controller.signal);
+          return [sym, response.data];
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            return [sym, null];
+          }
+          return [sym, null];
+        }
+      }),
+    ).then((results) => {
+      if (!controller.signal.aborted) {
+        setQuotes(Object.fromEntries(results));
+      }
+    });
+    return () => controller.abort();
   }, []);
 
   return (
@@ -78,7 +103,7 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
       <div className="border-t border-b border-stone-200 bg-stone-50/70 py-1.5 overflow-x-auto scrollbar-none text-xs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center gap-6 whitespace-nowrap">
           <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400 shrink-0">
-            Market Pulse:
+            Quick Picks:
           </span>
           <div className="flex items-center gap-6 divide-x divide-stone-200">
             {TICKER_RIBBON.map((t) => (
@@ -89,11 +114,16 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
                 className="flex items-center gap-2 pl-4 first:pl-0 hover:text-black group transition-colors"
                 title={`Open ${t.name} (${t.sym})`}
               >
-                <span className="font-serif font-bold text-stone-900 group-hover:underline">{t.sym}</span>
-                <span className="font-sans text-stone-600">{t.price}</span>
-                <span className={`inline-flex items-center text-[11px] font-bold ${t.up ? "text-emerald-700" : "text-rose-700"}`}>
-                  {t.up ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
-                  {t.chg}
+                <span className="font-serif font-bold text-stone-900 group-hover:underline">{t.name}</span>
+                <span className="font-sans text-[10px] text-stone-500">{t.sym}</span>
+                <span className="font-sans text-stone-700" aria-label={`${t.name} latest price`}>
+                  {money(quotes[t.sym]?.quote?.price, quotes[t.sym]?.profile?.currency)}
+                </span>
+                <span
+                  className={`font-sans text-[11px] font-bold ${changeColor(quotes[t.sym]?.quote?.change_pct)}`}
+                  aria-label={`${t.name} daily percentage change`}
+                >
+                  {pct(quotes[t.sym]?.quote?.change_pct)}
                 </span>
               </button>
             ))}

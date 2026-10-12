@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from ..config import Config
 from ..services.news_service import parse_datetime
 from . import entities as ent
+from . import insights
 from . import sentiment as sent
 from . import summarizer
 
@@ -30,6 +31,9 @@ def analyze_articles(articles: list[dict], symbol: str, company: str, cfg: Confi
     for a, s in zip(articles, results):
         summ = summarizer.summarize(a["title"], a.get("description") or "", cfg.SUMMARIZER_BACKEND)
         entities = ent.extract_entities(a["title"], a.get("description") or "", symbol, company, cfg.ENTITY_BACKEND)
+        text = ". ".join(part.strip() for part in (a["title"], a.get("description") or "") if part and part.strip())
+        temporal_references = insights.extract_temporal_references(text, a.get("published_at"))
+        coverage = a.get("coverage")
         enriched = dict(a)
         enriched.update({
             "sentiment": {k: s[k] for k in ("label", "probabilities", "confidence", "score", "backend", "calibrated")},
@@ -37,6 +41,10 @@ def analyze_articles(articles: list[dict], symbol: str, company: str, cfg: Confi
             "entities": entities,
             "explanation": {
                 "signals": s["signals"],
+                "aspects": insights.analyze_aspects(a["title"], a.get("description") or "", analyzer),
+                "events": insights.extract_events(text, temporal_references),
+                "temporal_references": temporal_references,
+                "coverage": coverage,
                 "note": ("Terms in the text that are associated with this label. They indicate what the "
                          "classifier saw, not a proven cause of the result."),
                 "summary_method": summ["method"], "summary_basis": summ["basis"],

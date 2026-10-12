@@ -121,6 +121,66 @@ export default function ArticleCard({ article, compact = false, defaultOpen = fa
                 {ex.note && <p className="mt-1.5 text-stone-500 font-serif italic">{ex.note}</p>}
               </div>
               <EntityTags entities={article.entities} />
+              {ex.aspects?.length > 0 && (
+                <section aria-label="Aspect sentiment">
+                  <p className="mb-1 font-bold uppercase tracking-wider text-[10px] text-stone-500">Aspect sentiment</p>
+                  <div className="space-y-1.5">
+                    {ex.aspects.map((aspect) => (
+                      <div key={aspect.aspect} className="flex flex-wrap items-baseline gap-x-2">
+                        <strong>{aspect.aspect}:</strong>
+                        <span className="capitalize">{aspect.label}</span>
+                        <span className="text-stone-500">({signed(aspect.score)})</span>
+                        {aspect.evidence?.[0] && <span className="basis-full text-stone-500">{aspect.evidence[0]}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {ex.events?.length > 0 && (
+                <section aria-label="Financial events">
+                  <p className="mb-1 font-bold uppercase tracking-wider text-[10px] text-stone-500">Financial events</p>
+                  <ul className="space-y-1">
+                    {ex.events.map((event, i) => (
+                      <li key={`${event.type}-${i}`}>
+                        <strong>{event.type}</strong>
+                        {event.event_date && <span> · {event.event_date}</span>}
+                        <p className="text-stone-500">{event.evidence}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {ex.temporal_references?.length > 0 && (
+                <section aria-label="Dates mentioned in article">
+                  <p className="mb-1 font-bold uppercase tracking-wider text-[10px] text-stone-500">Dates mentioned</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ex.temporal_references.map((reference, i) => (
+                      <span className="chip" key={`${reference.text}-${i}`}>
+                        {reference.text} → {reference.date}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {ex.coverage?.article_count > 1 && (
+                <section aria-label="Related coverage">
+                  <p className="mb-1 font-bold uppercase tracking-wider text-[10px] text-stone-500">
+                    One story · {ex.coverage.article_count} reports · {ex.coverage.sources.join(", ")}
+                  </p>
+                  <ul className="space-y-1">
+                    {ex.coverage.articles.map((related, i) => (
+                      <li key={`${related.url || related.title}-${i}`}>
+                        {related.url ? (
+                          <a className="underline" href={related.url} target="_blank" rel="noopener noreferrer">
+                            {related.title}
+                          </a>
+                        ) : related.title}
+                        {related.source && <span className="text-stone-500"> · {related.source}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </div>
           )}
         </div>

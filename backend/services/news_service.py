@@ -149,21 +149,46 @@ def _norm_title(t: str) -> str:
 
 
 def dedupe(articles: list[dict], threshold: float = 0.86) -> list[dict]:
-    """Drop repeats by URL, normalised title, and near-identical (fuzzy) headlines. Keeps the earliest."""
-    seen_urls: set[str] = set()
-    kept: list[dict] = []
-    kept_titles: list[str] = []
+    """Cluster repeats by URL or similar headlines, retaining the earliest with coverage metadata."""
+    clusters: list[dict] = []
     for a in sorted(articles, key=lambda x: x.get("published_at") or ""):
         url = (a.get("url") or "").split("?")[0].rstrip("/").lower()
         nt = _norm_title(a["title"])
-        if not nt or (url and url in seen_urls):
+        if not nt:
             continue
-        if any(nt == k or SequenceMatcher(None, nt, k).ratio() >= threshold for k in kept_titles):
-            continue
+        matching = next(
+            (cluster for cluster in clusters
+             if (url and url in cluster["urls"])
+             or nt == cluster["normalized_title"]
+             or SequenceMatcher(None, nt, cluster["normalized_title"]).ratio() >= threshold),
+            None,
+        )
+        if matching is None:
+            matching = {"article": dict(a), "normalized_title": nt, "urls": set(), "members": []}
+            clusters.append(matching)
         if url:
-            seen_urls.add(url)
-        kept.append(a)
-        kept_titles.append(nt)
+            matching["urls"].add(url)
+        matching["members"].append(a)
+
+    kept = []
+    for cluster in clusters:
+        representative = cluster["article"]
+        members = cluster["members"]
+        sources = list(dict.fromkeys(a.get("source") for a in members if a.get("source")))
+        representative["coverage"] = {
+            "article_count": len(members),
+            "sources": sources,
+            "articles": [
+                {
+                    "title": a["title"],
+                    "source": a.get("source"),
+                    "url": a.get("url"),
+                    "published_at": a.get("published_at"),
+                }
+                for a in members
+            ],
+        }
+        kept.append(representative)
     return sorted(kept, key=lambda x: x.get("published_at") or "", reverse=True)
 
 

@@ -21,180 +21,84 @@ const POPULAR_LIST = [
   { sym: "TCS.NS", name: "Tata Consultancy", ex: "NSE" },
 ];
 
-function BroadsheetWire({ recent, onPick, currentSymbol }) {
-  return (
-    <aside className="space-y-6 lg:border-r lg:border-stone-200 lg:pr-6">
-      {/* Latest Articles / Wire */}
-      <div>
-        <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
-          Market Wire
-        </h3>
-        <ul className="space-y-2 text-xs divide-y divide-stone-100">
-          <li className="pt-1">
-            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Global Macro</span>
-            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("AAPL")}>
-              Central bank interest rate decisions guide equity valuation multiples.
-            </p>
-          </li>
-          <li className="pt-2">
-            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Earnings Watch</span>
-            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("NVDA")}>
-              Semiconductor demand surge bolsters quarterly forecasts and guidance.
-            </p>
-          </li>
-          <li className="pt-2">
-            <span className="font-sans font-bold text-stone-500 uppercase text-[9px] block">Energy & Commodities</span>
-            <p className="font-serif text-stone-800 leading-snug hover:text-black cursor-pointer" onClick={() => onPick("RELIANCE.NS")}>
-              Refinery margins fluctuate amid changing international trade policies.
-            </p>
-          </li>
-        </ul>
-      </div>
-
-      {/* Most Popular Tickers (Numbered 1 to 5 exactly like the newspaper image) */}
-      <div className="border-t border-stone-200 pt-5">
-        <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
-          Most Popular
-        </h3>
-        <ol className="space-y-3">
-          {POPULAR_LIST.map((item, index) => (
-            <li key={item.sym} className="flex items-start gap-3 group">
-              <span className="font-serif italic font-black text-2xl text-stone-400 group-hover:text-black leading-none w-5 text-right shrink-0">
-                {index + 1}
-              </span>
-              <button
-                type="button"
-                className="text-left flex-1"
-                onClick={() => onPick(item.sym)}
-              >
-                <p className="font-serif font-bold text-xs text-stone-900 group-hover:underline leading-snug">
-                  {item.name}
-                </p>
-                <p className="text-[10px] text-stone-500 uppercase tracking-wider font-sans">
-                  <span className="font-bold text-stone-800">{item.sym}</span> · {item.ex}
-                </p>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {/* Recently Searched */}
-      {recent?.length > 0 && (
-        <div className="border-t border-stone-200 pt-5">
-          <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-stone-200 pb-1 mb-3">
-            Recently Searched
-          </h3>
-          <ul className="space-y-1.5 text-xs">
-            {recent.map((r) => (
-              <li key={r.symbol}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between text-left py-1 hover:text-black group"
-                  onClick={() => onPick(r.symbol)}
-                >
-                  <span className="truncate text-stone-700 font-serif group-hover:underline">{r.name || r.symbol}</span>
-                  <span className="font-sans font-bold text-[10px] text-stone-500 bg-stone-100 px-1 border border-stone-200">
-                    {r.symbol}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </aside>
-  );
-}
-
 function Home({ onPick }) {
-  const { data: recent } = useApi((s) => api.history(s), []);
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Left Column: Market Wire & Most Popular */}
-      <div className="lg:col-span-3">
-        <BroadsheetWire recent={recent} onPick={onPick} />
-      </div>
-
-      {/* Center Column: Breaking Lead Story */}
-      <div className="lg:col-span-6 lg:border-r lg:border-stone-200 lg:pr-8 space-y-6">
-        <div>
-          <span className="broadsheet-kicker">Lead Editorial & Market Intelligence</span>
-          <h2 className="font-serif font-black text-3xl sm:text-5xl text-stone-950 tracking-tight leading-tight mt-1">
-            Read the news the way the market does.
-          </h2>
-          <div className="mt-2 text-xs text-stone-500 font-serif italic border-b border-stone-200 pb-3">
-            By Quantitative NLP Editorial Desk · Published Daily
-          </div>
-          <p className="mt-4 font-serif text-sm sm:text-base leading-relaxed text-stone-800">
-            Search any publicly traded corporation to examine how recent financial press classifies sentiment, extracts named entities and financial metrics, and predicts the next five trading sessions via walk-forward machine learning models.
-          </p>
-        </div>
-
-        {/* Quick Ticker Launcher Box */}
-        <div className="border border-stone-900 p-5 bg-stone-50/50">
-          <p className="font-sans text-xs font-bold uppercase tracking-wider text-stone-900 mb-2.5">
-            Select an active market company to begin analysis
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {POPULAR_LIST.map((item) => (
-              <button
-                key={item.sym}
-                className="btn"
-                onClick={() => onPick(item.sym)}
-              >
-                {item.sym}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Lead Analysis Preview Story */}
-        <div className="border-t border-stone-200 pt-5 space-y-3">
-          <span className="broadsheet-kicker">Methodology Spotlight</span>
-          <h3 className="font-serif font-bold text-xl text-stone-900">
-            Natural Language Processing vs. Traditional Price Volatility
-          </h3>
-          <p className="font-serif text-xs text-stone-700 leading-relaxed">
-            Short-term market oscillations often defy simplistic sentiment heuristics. FinSight benchmarks every classification against a naive baseline, revealing when news signals genuinely lead price discovery versus when noise dominates.
-          </p>
-          <Link to="/about" className="inline-block text-xs font-bold uppercase tracking-wider text-stone-900 hover:underline">
-            Read Full Methodology Report →
+    <div className="mx-auto max-w-5xl space-y-10">
+      <section className="rounded-lg border border-stone-200 bg-stone-50 p-6 sm:p-10">
+        <span className="broadsheet-kicker">Financial news and stock analysis</span>
+        <h2 className="mt-2 max-w-3xl font-serif text-3xl font-black leading-tight tracking-tight text-stone-950 sm:text-5xl">
+          Understand what is moving a company’s story.
+        </h2>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-700 sm:text-base">
+          Explore company news, sentiment, stock performance, and an experimental five-session trend forecast.
+          Search by company name or ticker using the search box above.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link to="/about" className="btn btn-primary">
+            How FinSight works <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
+          <span className="self-center text-xs text-stone-500">Or choose a popular company below.</span>
         </div>
-      </div>
+      </section>
 
-      {/* Right Column: Daily Feed & Methodology Brief */}
-      <div className="lg:col-span-3 space-y-6">
-        <div>
-          <h3 className="font-serif italic font-bold text-base text-stone-900 border-b border-black pb-1 mb-3">
-            Daily Feed
+      <section aria-labelledby="popular-companies-heading">
+        <div className="mb-4">
+          <h3 id="popular-companies-heading" className="font-serif text-xl font-bold text-stone-950">
+            Choose a company to get started
           </h3>
-          <div className="space-y-4 text-xs font-serif divide-y divide-stone-100">
-            <div className="pt-2">
-              <span className="broadsheet-kicker">NLP Lexicon</span>
-              <h4 className="font-bold text-stone-900 mt-0.5">Finance-Specific Terminology</h4>
-              <p className="text-stone-600 mt-1 leading-snug">
-                Every headline is scored positive, negative, or neutral through domain-tuned financial lexicons accounting for negation and intensity.
-              </p>
-            </div>
-            <div className="pt-3">
-              <span className="broadsheet-kicker">Machine Learning</span>
-              <h4 className="font-bold text-stone-900 mt-0.5">Walk-Forward Model Validation</h4>
-              <p className="text-stone-600 mt-1 leading-snug">
-                Three classifiers compete under rolling backtests with strict label separation to avert data snooping.
-              </p>
-            </div>
-            <div className="pt-3">
-              <span className="broadsheet-kicker">Entity Extraction</span>
-              <h4 className="font-bold text-stone-900 mt-0.5">Named Organisations & Figures</h4>
-              <p className="text-stone-600 mt-1 leading-snug">
-                Extracts dollar sums, revenues, and key executives from coverage text.
-              </p>
-            </div>
-          </div>
+          <p className="mt-1 text-sm text-stone-600">Select a company to open its dashboard.</p>
         </div>
-      </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {POPULAR_LIST.map((item) => (
+            <button
+              key={item.sym}
+              type="button"
+              className="group flex min-h-24 items-center justify-between rounded-md border border-stone-200 bg-white p-4 text-left transition hover:border-stone-900 hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900"
+              onClick={() => onPick(item.sym)}
+            >
+              <span>
+                <span className="block font-serif font-bold text-stone-950 group-hover:underline">{item.name}</span>
+                <span className="mt-1 block text-xs text-stone-500">{item.sym} · {item.ex}</span>
+              </span>
+              <ArrowRight className="h-4 w-4 text-stone-400 transition group-hover:translate-x-1 group-hover:text-stone-900" aria-hidden />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="overview-heading">
+        <div className="mb-4">
+          <h3 id="overview-heading" className="font-serif text-xl font-bold text-stone-950">What you can explore</h3>
+          <p className="mt-1 text-sm text-stone-600">Each company dashboard brings its key information together.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-md border border-stone-200 p-5">
+            <h4 className="font-serif font-bold text-stone-900">News & sentiment</h4>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              Review analyzed headlines, summaries, sentiment, and key financial topics.
+            </p>
+          </article>
+          <article className="rounded-md border border-stone-200 p-5">
+            <h4 className="font-serif font-bold text-stone-900">Price & performance</h4>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              Explore recent prices, historical charts, trading volume, and market indicators.
+            </p>
+          </article>
+          <article className="rounded-md border border-stone-200 p-5">
+            <h4 className="font-serif font-bold text-stone-900">Trend forecast</h4>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              See an experimental five-session forecast alongside model evaluation and a baseline comparison.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <p className="border-t border-stone-200 pt-4 text-xs leading-relaxed text-stone-500">
+        Forecasts are experimental and for educational use only—not financial advice. Short-term market movements are uncertain.
+        <Link to="/about" className="ml-1 font-semibold text-stone-800 underline underline-offset-2 hover:text-black">
+          Read about the methodology and limitations.
+        </Link>
+      </p>
     </div>
   );
 }
@@ -312,8 +216,6 @@ export default function Dashboard({ onPick }) {
   const [watchBusy, setWatchBusy] = useState(false);
 
   const { data, error, loading, reload } = useApi((signal) => (sym ? api.dashboard(sym, { period }, signal) : null), [sym, period]);
-  const { data: recentHistory } = useApi((s) => api.history(s), []);
-
   useEffect(() => {
     setOverride(null);
     setRefreshError("");
@@ -373,17 +275,10 @@ export default function Dashboard({ onPick }) {
         watchBusy={watchBusy}
       />
 
-      {/* 3-Column Broadsheet Layout (Exactly like the uploaded newspaper format) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Column 1: Market Wire & Most Popular */}
-        <div className="lg:col-span-3">
-          <BroadsheetWire recent={recentHistory} onPick={onPick} currentSymbol={sym} />
-        </div>
-
-        {/* Column 2: Breaking News & Centerpiece Price/Forecast */}
-        <div className="lg:col-span-6 lg:border-r lg:border-stone-200 lg:pr-8 space-y-6">
-          <h2 className="font-serif italic font-bold text-xl text-stone-900 border-b border-black pb-1">
-            Breaking News & Market Action
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">
+        <div className="space-y-6 lg:col-span-8">
+          <h2 className="border-b border-stone-200 pb-2 font-serif text-xl font-bold text-stone-900">
+            Stock performance and forecast
           </h2>
 
           {/* Price Action Broadsheet Chart */}
@@ -411,10 +306,9 @@ export default function Dashboard({ onPick }) {
           </div>
         </div>
 
-        {/* Column 3: Daily Feed & Sentiment Pulse */}
-        <div className="lg:col-span-3 space-y-6">
-          <h2 className="font-serif italic font-bold text-xl text-stone-900 border-b border-black pb-1">
-            Daily Feed
+        <div className="space-y-4 lg:col-span-4">
+          <h2 className="border-b border-stone-200 pb-2 font-serif text-xl font-bold text-stone-900">
+            News overview
           </h2>
 
           {newsDown ? (

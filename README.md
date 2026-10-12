@@ -35,11 +35,11 @@ finsight/
 │   └── utils/                 # errors, TTL cache, HTTP retries, symbols/market sessions
 ├── frontend/                  # React + Vite + Tailwind + Recharts
 │   └── src/{pages,components,hooks,api.js,test}
-└── tests/                     # pytest suite (77 tests)
+└── tests/                     # pytest suite (82 tests)
 ```
 
 Data flow for one dashboard request:
-`yfinance prices` + `news providers → de-duplicate → sentiment → entities → summary → SQLite` → `aggregate score` →
+`yfinance prices` + `news providers → cluster repeated stories → sentiment/aspects/events/dates → entities → summary → SQLite` → `aggregate score` →
 `features + labels → chronological train/test → best model → forecast` → one JSON payload for the UI.
 
 ## Prerequisites
@@ -143,6 +143,18 @@ source produces an error message or an “unavailable” panel, never made-up nu
   confusion matrix) next to a most-frequent-class baseline, then refit on all labelled data for the live forecast.
 * Retrain on demand with `GET /api/prediction/<symbol>?retrain=true` (throttled).
 
+## News NLP insights
+Each analyzed article includes its overall sentiment plus rule-guided aspect sentiment, financial event matches,
+and temporal references resolved against the article publication timestamp. Aspect scores are run on topic-bearing
+sentences, so mixed coverage (for example positive earnings and negative guidance) can retain both signals. Event
+matches include their triggering text and evidence; they are extraction candidates, not verified facts. Dates include
+their source phrase, resolved date, and whether the reference is explicit, relative, or a weekday.
+
+Repeated or near-identical headlines are presented as one story with related titles, source names, URLs, and report
+count attached in the article explanation's `coverage` field. Existing API routes expose all per-article insights;
+no additional endpoint is required. These deterministic topic/event/date rules and the sentiment model should be
+evaluated against manually annotated financial articles before their output is used in downstream forecasts.
+
 ## API reference
 All responses use `{"data": ..., "generated_at": ..., "demo": bool, "warnings": [...]}`; errors use
 `{"error": {"code", "message", "details"}}` with a meaningful HTTP status (400 invalid input, 404 unknown ticker, 422 not enough
@@ -166,8 +178,8 @@ data, 429 rate limited, 502 provider down).
 
 ## Testing
 ```bash
-pytest                    # 77 backend tests: sentiment, entities, summaries, retrieval, labels, leakage, models, DB, API
-cd frontend && npm test   # 19 frontend tests: loading, error, empty and unavailable states, filters, watchlist
+pytest                    # 82 backend tests: sentiment, entities, summaries, retrieval, labels, leakage, models, DB, API
+cd frontend && npm test   # 23 frontend tests: loading, error, empty and unavailable states, filters, watchlist, article insights
 ```
 Backend tests run against deterministic demo data or mocked providers, so they need no network or API keys.
 

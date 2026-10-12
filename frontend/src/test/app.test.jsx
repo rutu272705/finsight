@@ -9,12 +9,13 @@ import Watchlist from "../pages/Watchlist.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
 import PredictionCard from "../components/PredictionCard.jsx";
 import SearchBar from "../components/SearchBar.jsx";
+import BroadsheetHeader from "../components/BroadsheetHeader.jsx";
 import { article, dashboard } from "./fixtures.js";
 
 vi.mock("../api.js", async (orig) => {
   const actual = await orig();
   const fn = () => vi.fn();
-  return { ...actual, api: { health: fn(), search: fn(), dashboard: fn(), news: fn(), watchlist: fn(), history: fn(), addWatch: fn(), removeWatch: fn(), clearHistory: fn(), prediction: fn(), analytics: fn(), exportUrl: (s, t) => `/api/export/${s}?type=${t}` } };
+  return { ...actual, api: { health: fn(), search: fn(), stock: fn(), dashboard: fn(), news: fn(), watchlist: fn(), history: fn(), addWatch: fn(), removeWatch: fn(), clearHistory: fn(), prediction: fn(), analytics: fn(), exportUrl: (s, t) => `/api/export/${s}?type=${t}` } };
 });
 
 const at = (path, ui, route = "/stock/:symbol") =>
@@ -89,7 +90,10 @@ describe("Dashboard", () => {
   it("home screen offers example tickers", async () => {
     const pick = vi.fn();
     at("/", <Dashboard onPick={pick} />, "/");
-    await userEvent.click(screen.getByRole("button", { name: "TCS.NS" }));
+    expect(screen.queryByText("Market Wire")).not.toBeInTheDocument();
+    expect(screen.queryByText("Daily Feed")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose a company to get started" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Tata Consultancy TCS\.NS · NSE/i }));
     expect(pick).toHaveBeenCalledWith("TCS.NS");
   });
 });
@@ -129,6 +133,21 @@ describe("News page", () => {
 });
 
 describe("Components", () => {
+  it("shows fetched prices and daily percentages beside quick-pick tickers", async () => {
+    api.stock.mockImplementation((symbol) => ok({
+      symbol,
+      profile: { currency: symbol.endsWith(".NS") ? "INR" : "USD" },
+      quote: { price: symbol.endsWith(".NS") ? 4215 : 129, change_pct: symbol === "AAPL" ? 0.78 : -0.22 },
+    }));
+    render(<MemoryRouter><BroadsheetHeader onSelect={() => {}} /></MemoryRouter>);
+    const apple = screen.getByRole("button", { name: /apple aapl/i });
+    await waitFor(() => expect(apple).toHaveTextContent("$129.00"));
+    expect(apple).toHaveTextContent("+0.78%");
+    const tcs = screen.getByRole("button", { name: /tcs tcs\.ns/i });
+    expect(tcs).toHaveTextContent("₹4,215.00");
+    expect(tcs).toHaveTextContent("-0.22%");
+  });
+
   it("article card opens the original in a new tab and reveals the explanation", async () => {
     render(<ArticleCard article={article()} />);
     const link = screen.getByRole("link", { name: /apple beats earnings/i });
@@ -138,6 +157,27 @@ describe("Components", () => {
     expect(screen.getByText("beats")).toBeInTheDocument();
     expect(screen.getByText(/associative, not causal/i)).toBeInTheDocument();
     expect(screen.getByText(/revenue/)).toBeInTheDocument();
+  });
+
+  it("shows aspect sentiment, extracted events, dates and grouped coverage", async () => {
+    render(<ArticleCard article={article({
+      explanation: {
+        aspects: [{ aspect: "Guidance & Outlook", label: "negative", score: -0.4, evidence: ["Guidance was weak."] }],
+        events: [{ type: "Guidance update", event_date: "2026-10-10", evidence: "Company lowered guidance." }],
+        temporal_references: [{ text: "tomorrow", date: "2026-10-10" }],
+        coverage: {
+          article_count: 2,
+          sources: ["Reuters", "Bloomberg"],
+          articles: [{ title: "Related report", source: "Bloomberg", url: "https://example.com/b" }],
+        },
+      },
+    })} />);
+    await userEvent.click(screen.getByRole("button", { name: /why this label/i }));
+    expect(screen.getByLabelText("Aspect sentiment")).toHaveTextContent(/Guidance & Outlook:negative/);
+    expect(screen.getByLabelText("Financial events")).toHaveTextContent("Guidance update");
+    expect(screen.getByLabelText("Dates mentioned in article")).toHaveTextContent("tomorrow → 2026-10-10");
+    expect(screen.getByLabelText("Related coverage")).toHaveTextContent("2 reports · Reuters, Bloomberg");
+    expect(screen.getByRole("link", { name: "Related report" })).toHaveAttribute("rel", "noopener noreferrer");
   });
 
   it("flags headline-only summaries and demo articles", () => {

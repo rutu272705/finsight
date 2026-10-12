@@ -38,13 +38,17 @@ def test_news_filters(client):
 
 def test_analyze_custom_articles(client):
     body = {"symbol": "INFY.NS", "articles": [
-        {"title": "Infosys raises revenue guidance after strong quarter", "description": "Net profit rose 8% to ₹6,300 crore."},
+        {"title": "Infosys raises revenue guidance after strong quarter",
+         "description": "Net profit rose 8% to ₹6,300 crore. Results announced on October 12, 2026."},
         {"title": "Infosys faces regulatory probe over filing delays"}]}
     d = client.post("/api/analyze", json=body).get_json()["data"]
     labels = [a["sentiment"]["label"] for a in d["articles"]]
     assert labels == ["positive", "negative"] and d["stored"] is False
     assert d["articles"][0]["entities"]["percentages"][0]["context"] == "profit"
     assert d["articles"][0]["summary"] and d["articles"][0]["explanation"]["signals"]
+    assert d["articles"][0]["explanation"]["aspects"]
+    assert d["articles"][0]["explanation"]["events"]
+    assert d["articles"][0]["explanation"]["temporal_references"][0]["date"] == "2026-10-12"
 
 
 @pytest.mark.parametrize("payload", [
@@ -125,6 +129,7 @@ def test_stored_articles_reopen_and_export(client):
     client.get("/api/dashboard/AAPL")
     arts = client.get("/api/articles?symbol=AAPL").get_json()["data"]["articles"]
     assert arts
+    assert {"aspects", "events", "temporal_references", "coverage"} <= set(arts[0]["explanation"])
     one = client.get(f"/api/articles/{arts[0]['id']}")
     assert one.status_code == 200 and one.get_json()["data"]["title"] == arts[0]["title"]
     assert client.get("/api/articles/999999").status_code == 404

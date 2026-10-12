@@ -10,9 +10,9 @@ def art(title, url, when="2099-01-01T10:00:00+00:00", desc=""):
 
 def test_dedupe_by_url_title_and_fuzzy_match():
     items = [
-        art("Apple beats earnings estimates", "https://a.com/1"),
-        art("Apple Beats Earnings Estimates!", "https://b.com/2"),         # same headline, other outlet
-        art("Apple beats earnings estimate", "https://c.com/3"),           # near-identical
+        {**art("Apple beats earnings estimates", "https://a.com/1"), "source": "Reuters"},
+        {**art("Apple Beats Earnings Estimates!", "https://b.com/2"), "source": "Bloomberg"},  # same headline
+        {**art("Apple beats earnings estimate", "https://c.com/3"), "source": "CNBC"},  # near-identical
         art("Tesla recalls 100,000 cars", "https://d.com/4?utm=1"),
         art("Completely different headline about oil", "https://d.com/4"),  # same URL after stripping query
         art("Tesla expands factory in Berlin", "https://e.com/5"),
@@ -21,6 +21,9 @@ def test_dedupe_by_url_title_and_fuzzy_match():
     titles = [a["title"] for a in out]
     assert len(out) == 3
     assert any("Tesla recalls" in t for t in titles) and any("Berlin" in t for t in titles)
+    repeated = next(a for a in out if a["title"] == "Apple beats earnings estimates")
+    assert repeated["coverage"]["article_count"] == 3
+    assert set(repeated["coverage"]["sources"]) == {"Reuters", "Bloomberg", "CNBC"}
 
 
 def test_relevance_levels():
