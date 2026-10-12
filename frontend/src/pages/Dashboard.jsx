@@ -222,7 +222,7 @@ export default function Dashboard({ onPick }) {
     setWatching(null);
   }, [sym, period]);
   useEffect(() => {
-    document.title = sym ? `${sym} · The FinSight Chronicle` : "The FinSight Chronicle";
+    document.title = sym ? `${sym} · FinSight` : "FinSight";
   }, [sym]);
 
   if (!sym) return <Home onPick={onPick} />;
@@ -387,7 +387,7 @@ export default function Dashboard({ onPick }) {
       </div>
 
       <Disclaimer>
-        The FinSight Chronicle is an educational NLP intelligence project. Sentiment scores and trend forecasts are experimental models and are not financial advice.
+        FinSight is an educational NLP intelligence project. Sentiment scores and trend forecasts are experimental models and are not financial advice.
       </Disclaimer>
     </div>
   );

@@ -46,7 +46,7 @@ export default function BroadsheetFooter() {
         <div className="grid grid-cols-2 gap-8 border-b border-stone-200 pb-10 sm:grid-cols-4 text-xs">
           <div>
             <h4 className="font-serif font-black uppercase tracking-wider text-stone-900 mb-3 text-sm">
-              The Chronicle
+              FinSight
             </h4>
             <p className="text-stone-600 leading-relaxed mb-3">
               Independent natural language processing system analysing corporate news, sentiment trends, and price movements.
@@ -94,7 +94,7 @@ export default function BroadsheetFooter() {
 
         {/* Bottom Broadsheet Signature */}
         <div className="pt-6 text-center text-[11px] text-stone-500">
-          <p className="font-serif italic">The FinSight Chronicle © 2026 | All Rights Reserved</p>
+          <p className="font-serif italic">FinSight © 2026 | All Rights Reserved</p>
         </div>
       </div>
     </footer>

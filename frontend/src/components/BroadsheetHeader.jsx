@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import SearchBar from "./SearchBar.jsx";
 import { NAV_ITEMS } from "./Sidebar.jsx";
@@ -16,6 +16,7 @@ const TICKER_RIBBON = [
 ];
 
 export default function BroadsheetHeader({ symbol, health, onSelect }) {
+  const { pathname } = useLocation();
   const [currentDate, setCurrentDate] = useState("");
   const [quotes, setQuotes] = useState({});
 
@@ -86,7 +87,7 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
         <div className="py-5 text-center sm:py-7">
           <Link to="/" className="inline-block group">
             <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-stone-950 transition-colors group-hover:text-stone-800">
-              The FinSight Chronicle
+              FinSight
             </h1>
           </Link>
           <div className="mt-2 flex items-center justify-center gap-3 text-[10px] sm:text-xs font-serif italic text-stone-600">
@@ -100,18 +101,18 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
       </div>
 
       {/* Quick Financial Ticker Ribbon (Market pulse for instant one-click stock viewing) */}
-      <div className="border-t border-b border-stone-200 bg-stone-50/70 py-1.5 overflow-x-auto scrollbar-none text-xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center gap-6 whitespace-nowrap">
+      <div className="border-t border-b border-stone-200 bg-stone-50/70 py-2 text-xs">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-6">
           <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-400 shrink-0">
             Quick Picks:
           </span>
-          <div className="flex items-center gap-6 divide-x divide-stone-200">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
             {TICKER_RIBBON.map((t) => (
               <button
                 key={t.sym}
                 type="button"
                 onClick={() => onSelect(t.sym)}
-                className="flex items-center gap-2 pl-4 first:pl-0 hover:text-black group transition-colors"
+                className="flex min-w-0 items-center gap-x-1.5 rounded-sm border border-stone-200 bg-white px-2 py-1 hover:border-stone-400 hover:text-black group transition-colors"
                 title={`Open ${t.name} (${t.sym})`}
               >
                 <span className="font-serif font-bold text-stone-900 group-hover:underline">{t.name}</span>
@@ -133,9 +134,9 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
 
       {/* Sticky Double-Line Category Navigation Bar with Search */}
       <div className="sticky top-0 z-30 border-b-2 border-black bg-white/95 backdrop-blur shadow-2xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold uppercase tracking-wider text-stone-800 md:justify-start">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6">
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
+            <nav aria-label="Main Navigation" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-wider text-stone-800 md:justify-start lg:flex-nowrap lg:gap-x-4 xl:gap-x-5">
               <NavLink
                 to="/"
                 end
@@ -147,7 +148,7 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
               >
                 Home
               </NavLink>
-              {NAV_ITEMS.map((it) => (
+              {NAV_ITEMS.filter((it) => it.to(symbol) && !(it.label === "Dashboard" && pathname === "/")).map((it) => (
                 <NavLink
                   key={it.label}
                   to={it.to(symbol)}
@@ -163,8 +164,16 @@ export default function BroadsheetHeader({ symbol, health, onSelect }) {
               ))}
             </nav>
 
-            <div className="w-full md:w-80">
-              <SearchBar onSelect={onSelect} />
+            <div className="grid w-full gap-1.5 border-t border-stone-200 pt-2.5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:gap-3 lg:max-w-md lg:flex-1 lg:grid-cols-[auto_minmax(0,1fr)] lg:border-0 lg:pt-0">
+              <p className="whitespace-nowrap text-xs font-bold text-stone-700">
+                Search stocks:
+                <span className="sr-only"> company name or ticker</span>
+              </p>
+              <SearchBar
+                onSelect={onSelect}
+                label="Search stocks by company name or ticker"
+                placeholder="Try Apple, AAPL, or TCS.NS"
+              />
             </div>
           </div>
         </div>

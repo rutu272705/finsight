@@ -133,6 +133,16 @@ describe("News page", () => {
 });
 
 describe("Components", () => {
+  it("keeps Home and Dashboard navigation distinct", async () => {
+    const home = render(<MemoryRouter initialEntries={["/"]}><BroadsheetHeader symbol="AAPL" onSelect={() => {}} /></MemoryRouter>);
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+    home.unmount();
+
+    render(<MemoryRouter initialEntries={["/stock/AAPL"]}><BroadsheetHeader symbol="AAPL" onSelect={() => {}} /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/stock/AAPL"));
+  });
+
   it("shows fetched prices and daily percentages beside quick-pick tickers", async () => {
     api.stock.mockImplementation((symbol) => ok({
       symbol,

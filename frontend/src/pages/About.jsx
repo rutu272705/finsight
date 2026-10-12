@@ -72,7 +72,7 @@ export default function About() {
       </div>
 
       <p className="text-[11px] text-stone-400 font-serif italic text-center">
-        The FinSight Chronicle · Natural Language Processing Intelligence Platform · 2026
+        FinSight · Natural Language Processing Intelligence Platform · 2026
       </p>
     </div>
   );

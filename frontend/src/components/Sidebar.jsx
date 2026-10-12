@@ -1,8 +1,8 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Activity, BookOpen, LayoutDashboard, LineChart, Newspaper, Star } from "lucide-react";
 
 export const NAV_ITEMS = [
-  { to: (s) => (s ? `/stock/${s}` : "/"), label: "Dashboard", end: false },
+  { to: (s) => (s ? `/stock/${s}` : null), label: "Dashboard", end: true },
   { to: (s) => (s ? `/news/${s}` : "/news"), label: "Market News" },
   { to: (s) => (s ? `/analytics/${s}` : "/analytics"), label: "Analytics & Models" },
   { to: () => "/watchlist", label: "Watchlist" },
@@ -13,17 +13,18 @@ export function Logo() {
   return (
     <div className="flex items-center gap-2">
       <span className="font-serif font-black tracking-tight text-xl text-stone-950">
-        The FinSight Chronicle
+        FinSight
       </span>
     </div>
   );
 }
 
 export default function Sidebar({ symbol, health }) {
+  const { pathname } = useLocation();
   // Mobile bottom quick-navigation bar (hidden on desktop)
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t border-stone-300 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Mobile Navigation">
-      {NAV_ITEMS.map((it) => (
+      {NAV_ITEMS.filter((it) => it.to(symbol) && !(it.label === "Dashboard" && pathname === "/")).map((it) => (
         <NavLink
           key={it.label}
           to={it.to(symbol)}
