@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, api } from "../api.js";
 import App from "../App.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
+import Analytics from "../pages/Analytics.jsx";
 import News from "../pages/News.jsx";
 import Watchlist from "../pages/Watchlist.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
@@ -212,6 +213,55 @@ describe("News page", () => {
   });
 });
 
+describe("Analytics page", () => {
+  it("explains what the charts show in plain language", async () => {
+    api.analytics.mockReturnValue(ok({
+      profile: { name: "Apple Inc." },
+      range: ["2026-10-01", "2026-10-02"],
+      series: [
+        { date: "2026-10-01", return_pct: 1.2, sentiment: 0.4, articles: 2 },
+        { date: "2026-10-02", return_pct: -0.8, sentiment: -0.2, articles: 1 },
+      ],
+      prediction_history: [],
+    }));
+    api.prediction.mockReturnValue(ok({
+      model_name: "Random Forest",
+      comparison: [{
+        model: "Random Forest",
+        cv_f1_macro: 0.4,
+        test: { accuracy: 0.35, precision_macro: 0.4, recall_macro: 0.4, f1_macro: 0.4 },
+      }],
+      baseline: { accuracy: 0.48, precision_macro: 0.4, recall_macro: 0.4, f1_macro: 0.4 },
+      test_metrics: { accuracy: 0.35, n: 20, confusion_matrix: { labels: ["Downward", "Stable", "Upward"], matrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] } },
+      backtest: [],
+      feature_importance: [{ feature: "ret_1", importance: 0.5 }],
+      n_test: 3,
+      n_train: 20,
+      train_period: ["2026-01-01", "2026-09-01"],
+      test_period: ["2026-09-10", "2026-10-02"],
+      horizon_days: 5,
+      sentiment_coverage_pct: 40,
+    }));
+    api.news.mockReturnValue(ok({ topics: { topics: [], companies: [] } }));
+
+    render(<MemoryRouter initialEntries={["/analytics/AAPL"]}><Routes><Route path="/analytics/:symbol" element={<Analytics />} /></Routes></MemoryRouter>);
+
+    expect(await screen.findByText(/how the share price moved each day/i)).toBeInTheDocument();
+    expect(screen.getByText(/each bar is one day's percentage change/i)).toBeInTheDocument();
+    expect(screen.getByText(/the line summarizes the wording in news/i)).toBeInTheDocument();
+    expect(screen.getByText(/bars show each day's price change/i)).toBeInTheDocument();
+    expect(screen.queryByText(/each dot is one day/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/more positive news tended to appear on days prices rose/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/got fewer days right than the simple guess/i)).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.includes("7 of 20"))).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.includes("10 of 20"))).toBeInTheDocument();
+    const detailedResults = screen.getByText("See detailed charts and technical scores");
+    await userEvent.click(detailedResults);
+    expect(screen.getByText(/numbers along the diagonal are correct guesses/i)).toBeInTheDocument();
+    expect(screen.getByText("Price change yesterday")).toBeInTheDocument();
+  });
+});
+
 describe("Components", () => {
   it("explains the overall news tone and weighted story count in plain language", async () => {
     render(<SentimentSummary aggregate={{
@@ -320,6 +370,23 @@ describe("Components", () => {
     expect(screen.getByText(/rise.*more than 1%.*fall.*more than 1%/i)).toBeInTheDocument();
   });
 
+  it("shows why this forecast was made using feature-level effects", async () => {
+    const data = {
+      ...dashboard().prediction,
+      explanation: [{
+        feature: "ret_5",
+        label: "Price movement over the past 5 days",
+        direction: "increased",
+        impact_pp: 2.4,
+      }],
+    };
+    render(<MemoryRouter><PredictionCard prediction={data} symbol="AAPL" /></MemoryRouter>);
+    await userEvent.click(screen.getByText("Why did the model make this estimate?"));
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.includes("These are the inputs that most changed the model's estimate for Price may rise"))).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "LI" && element.textContent.includes("Price movement over the past 5 days increased the model's estimate by about 2.4 percentage points"))).toBeInTheDocument();
+    expect(screen.getByText(/not proof of what caused a price move/i)).toBeInTheDocument();
+  });
+
   it("makes clear when the model performed worse than the simple baseline", () => {
     const prediction = dashboard().prediction;
     const data = {
@@ -384,6 +451,8 @@ describe("Watchlist page", () => {
     api.removeWatch.mockReturnValue(ok({}));
     render(<MemoryRouter><Watchlist /></MemoryRouter>);
     expect(await screen.findByText("Tesla, Inc.")).toBeInTheDocument();
+    expect(screen.getByText(/compared with its previous close/i)).toBeInTheDocument();
+    expect(screen.getByText(/minus sign means it fell/i)).toBeInTheDocument();
     expect(screen.getByText(/price unavailable/i)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /remove tsla/i }));
     expect(api.removeWatch).toHaveBeenCalledWith("TSLA");

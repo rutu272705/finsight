@@ -49,6 +49,36 @@ export default function PredictionCard({ prediction, symbol }) {
         For this {horizon}-day period, “rise” means up more than {thresholdPct}%, “fall” means down more than {thresholdPct}%, and “little change” means between those amounts.
       </p>
 
+      <details className="mt-3 border-y border-stone-200 py-3">
+        <summary className="cursor-pointer text-sm font-semibold text-stone-900 hover:underline">
+          Why did the model make this estimate?
+        </summary>
+        <div className="mt-3 space-y-2">
+          {prediction.explanation?.length ? (
+            <>
+              <p className="text-xs leading-relaxed text-stone-700">
+                These are the inputs that most changed the model's estimate for <strong>{outcome}</strong>, compared with using typical values from its training data:
+              </p>
+              <ul className="space-y-2">
+                {prediction.explanation.map((item) => (
+                  <li key={item.feature} className="border-l-2 border-stone-400 pl-3 text-xs leading-relaxed text-stone-700">
+                    <strong className="text-stone-900">{item.label}</strong>{" "}
+                    {item.direction} the model's estimate by about <strong>{item.impact_pp} percentage points</strong>.
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="text-xs leading-relaxed text-stone-700">
+              No single input noticeably changed this estimate compared with its typical value in the training data.
+            </p>
+          )}
+          <p className="text-[11px] leading-relaxed text-stone-500">
+            This explanation compares one input at a time while keeping the others unchanged. Inputs can overlap, so this is an explanation of the model's calculation—not proof of what caused a price move or what will happen next.
+          </p>
+        </div>
+      </details>
+
       <div className="mt-4">
         <h4 className="text-xs font-bold text-stone-900">How the model weighs each outcome</h4>
         <p className="mt-0.5 text-[11px] leading-relaxed text-stone-600">These are the model's estimates—not guaranteed chances that an outcome will happen.</p>

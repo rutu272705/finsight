@@ -14,6 +14,45 @@ from .features import FEATURE_NAMES, build_features
 log = logging.getLogger(__name__)
 DISCLAIMER = ("Experimental model forecast based on historical patterns. It does not guarantee future price "
               "movements and is not financial advice.")
+FEATURE_LABELS = {
+    "ret_1": "Price movement over the past day",
+    "ret_5": "Price movement over the past 5 days",
+    "ret_10": "Price movement over the past 10 days",
+    "ret_20": "Price movement over the past 20 days",
+    "sma5_vs_sma20": "Short-term compared with longer-term price trend",
+    "close_vs_sma20": "Price compared with its 20-day average",
+    "close_vs_sma50": "Price compared with its 50-day average",
+    "volatility_10": "Price swings over the past 10 days",
+    "volatility_20": "Price swings over the past 20 days",
+    "volume_ratio_20": "Trading activity compared with its 20-day average",
+    "volume_chg_1": "Change in trading activity",
+    "rsi_14": "Recent buying and selling strength",
+    "macd_hist": "Recent change in price momentum",
+    "bb_position": "Price position within its recent range",
+    "hl_range_5": "Typical daily price range",
+    "sent_mean_5": "Average news tone over the past 5 days",
+    "sent_count_5": "Number of news items over the past 5 days",
+    "sent_available": "Whether news tone was available",
+}
+
+
+def _explain_prediction(pipe, row: pd.DataFrame, label: str, probability: float) -> list[dict]:
+    """Rank single-feature changes against training medians for the predicted class."""
+    medians = pipe.named_steps["imp"].statistics_
+    ranked = []
+    for index, feature in enumerate(FEATURE_NAMES):
+        changed = row.copy()
+        changed.loc[:, feature] = medians[index]
+        altered_probability = pipe.predict_proba(changed)[0][list(pipe.classes_).index(label)]
+        impact = probability - float(altered_probability)
+        if abs(impact) >= 0.005:
+            ranked.append({
+                "feature": feature,
+                "label": FEATURE_LABELS.get(feature, feature),
+                "direction": "increased" if impact > 0 else "decreased",
+                "impact_pp": round(abs(impact) * 100, 1),
+            })
+    return sorted(ranked, key=lambda item: item["impact_pp"], reverse=True)[:3]
 
 
 def _is_fresh(meta: dict, cfg: Config) -> bool:
@@ -54,8 +93,13 @@ def predict_latest(symbol: str, train_prices: pd.DataFrame, sentiment_daily, cfg
     for c in ("Downward", "Stable", "Upward"):
         probs.setdefault(c, 0.0)
     label = max(probs, key=probs.get)
+    try:
+        explanation = _explain_prediction(pipe, row, label, float(probs[label]))
+    except Exception as exc:
+        raise ModelError(f"The forecast explanation could not be produced ({type(exc).__name__}).") from exc
     return {
         "symbol": symbol, "label": label, "confidence": probs[label], "probabilities": probs,
+        "explanation": explanation,
         "predicted_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "as_of_date": usable.index[-1].strftime("%Y-%m-%d"),
         "horizon_days": meta["horizon_days"], "threshold": meta["threshold"],

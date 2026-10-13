@@ -78,6 +78,9 @@ export default function Watchlist() {
         <h3 className="font-serif font-bold text-lg text-stone-900 border-b border-black pb-2 mb-4">
           Saved Companies & Current Close
         </h3>
+        <p className="mb-4 text-xs leading-relaxed text-stone-600">
+          Session change shows how much the share price moved today compared with its previous close. A minus sign means it fell; a plus sign means it rose.
+        </p>
 
         {wl.loading && <Spinner label="Loading portfolio watchlist ledger" />}
         {wl.error && <ErrorState error={wl.error} onRetry={wl.reload} />}

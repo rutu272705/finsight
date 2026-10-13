@@ -1,11 +1,13 @@
 import numpy as np
+import pandas as pd
 import pytest
+from types import SimpleNamespace
 
 from backend.ml import train as trainer
 from backend.ml.evaluate import evaluate
 from backend.ml.features import FEATURE_NAMES
 from backend.ml.labels import CLASSES
-from backend.ml.predict import predict_latest
+from backend.ml.predict import _explain_prediction, predict_latest
 from backend.utils.errors import InsufficientDataError
 from tests.conftest import make_prices
 
@@ -49,8 +51,35 @@ def test_predict_returns_complete_labelled_forecast(cfg, tmp_path):
     assert p["confidence"] == max(p["probabilities"].values())
     assert p["horizon_days"] == cfg.FORECAST_HORIZON and p["predicted_at"] and p["as_of_date"]
     assert "not financial advice" in p["disclaimer"]
+    assert all(
+        set(item) == {"feature", "label", "direction", "impact_pp"}
+        and item["direction"] in {"increased", "decreased"}
+        and item["impact_pp"] >= 0.5
+        for item in p["explanation"]
+    )
+    assert len(p["explanation"]) <= 3
     # second call reuses the saved model (same trained_at)
     assert predict_latest("TEST", make_prices(600, seed=5), [], cfg)["trained_at"] == p["trained_at"]
+
+
+def test_explanation_reports_actual_single_feature_effect():
+    class ExampleModel:
+        classes_ = np.array(CLASSES)
+        named_steps = {"imp": SimpleNamespace(statistics_=np.zeros(len(FEATURE_NAMES)))}
+
+        def predict_proba(self, row):
+            up = 0.3 + 0.1 * row["ret_1"].iloc[0]
+            return np.array([[(1 - up) / 2, (1 - up) / 2, up]])
+
+    row = pd.DataFrame([{**dict.fromkeys(FEATURE_NAMES, 0.0), "ret_1": 1.0}])
+    explanation = _explain_prediction(ExampleModel(), row, "Upward", 0.4)
+
+    assert explanation == [{
+        "feature": "ret_1",
+        "label": "Price movement over the past day",
+        "direction": "increased",
+        "impact_pp": 10.0,
+    }]
 
 
 def test_prediction_changes_model_when_threshold_config_changes(cfg, tmp_path):
