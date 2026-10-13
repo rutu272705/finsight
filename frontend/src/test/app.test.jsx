@@ -73,8 +73,8 @@ describe("Dashboard", () => {
     expect(await screen.findByRole("heading", { name: "Apple Inc." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /featured stories & corporate news coverage/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Latest price")).toHaveTextContent("$129.00");
-    expect(screen.getByText(/next 5 trading sessions/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Upward").length).toBeGreaterThan(0);
+    expect(screen.getByText(/next 5 trading days/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Price may rise").length).toBeGreaterThan(0);
     expect(screen.getByText(/not financial advice/i, { selector: "div" })).toBeInTheDocument();
     expect(screen.getByText("+0.40")).toBeInTheDocument();
   });
@@ -311,9 +311,26 @@ describe("Components", () => {
     expect(screen.getByText(/not probabilities calibrated against observed outcomes/i)).toBeInTheDocument();
   });
 
-  it("prediction card warns when the model is no better than baseline", () => {
+  it("explains forecast outcomes and warns when the model is no better than baseline", () => {
     render(<MemoryRouter><PredictionCard prediction={dashboard().prediction} symbol="AAPL" /></MemoryRouter>);
-    expect(screen.getByText(/no more accurate than always guessing/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Price may rise")).toHaveLength(2);
+    expect(screen.getByText(/not guaranteed chances/i)).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.replace(/\s+/g, " ").includes("matched the outcome on 40% of past test dates"))).toBeInTheDocument();
+    expect(screen.getByText(/about as accurate as the simple guess/i)).toBeInTheDocument();
+    expect(screen.getByText(/rise.*more than 1%.*fall.*more than 1%/i)).toBeInTheDocument();
+  });
+
+  it("makes clear when the model performed worse than the simple baseline", () => {
+    const prediction = dashboard().prediction;
+    const data = {
+      ...prediction,
+      test_metrics: { ...prediction.test_metrics, accuracy: 0.35 },
+      baseline: { ...prediction.baseline, accuracy: 0.48 },
+    };
+    render(<MemoryRouter><PredictionCard prediction={data} symbol="AAPL" /></MemoryRouter>);
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.replace(/\s+/g, " ").includes("matched the outcome on 35% of past test dates"))).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent.replace(/\s+/g, " ").includes("simple guess based on the most common past result got 48%"))).toBeInTheDocument();
+    expect(screen.getByText(/model did worse than the simple guess/i)).toBeInTheDocument();
   });
 
   it("prediction card shows a reason when unavailable", () => {
