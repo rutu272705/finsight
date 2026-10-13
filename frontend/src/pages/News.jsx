@@ -9,10 +9,31 @@ import FilterBar from "../components/FilterBar.jsx";
 import EntityTags from "../components/EntityTags.jsx";
 import { SentimentSummary } from "../components/SentimentPanels.jsx";
 import SentimentDonut from "../components/SentimentDonut.jsx";
-import { signed } from "../format.js";
 
 const BLANK = { sentiment: "", source: "", from: "", to: "", days: "14" };
 const POPULAR = ["AAPL", "TSLA", "NVDA", "RELIANCE.NS", "TCS.NS", "INFY.NS"];
+
+function plainLanguageConclusion(article) {
+  const signals = article.explanation?.signals || [];
+  const positive = signals.filter((signal) => signal.polarity === "positive").map((signal) => signal.term);
+  const negative = signals.filter((signal) => signal.polarity === "negative").map((signal) => signal.term);
+  const label = article.sentiment?.label;
+  const examples = (terms) => terms.slice(0, 2).map((term) => `“${term}”`).join(" and ");
+
+  if (positive.length && negative.length) {
+    return `The wording is mixed. ${examples(positive)} sounds positive, while ${examples(negative)} sounds negative. FinSight labels the overall tone ${label || "mixed"}, but the positive wording does not erase the negative part of the story. Read the full report before drawing a conclusion.`;
+  }
+
+  if (positive.length) {
+    return `The wording leans positive. FinSight noticed ${examples(positive)}. That may sound encouraging, but it does not prove the company is doing well or mean its stock will rise.`;
+  }
+
+  if (negative.length) {
+    return `The wording leans negative. FinSight noticed ${examples(negative)}. That may sound concerning, but it does not prove the company is doing badly or mean its stock will fall.`;
+  }
+
+  return `FinSight labels the wording ${label || "unclear"}, but it did not find clear positive or negative word clues. The result may miss context, so read the full story before drawing a conclusion.`;
+}
 
 function CustomAnalyzer({ defaultSymbol = "" }) {
   const [open, setOpen] = useState(false);
@@ -121,22 +142,22 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
 
           {analysisResult && (
             <div className="mt-4 border border-stone-300 bg-white p-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-stone-200 pb-2">
-                <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-500">Analysis Result</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-stone-600 font-serif">Score: <strong>{signed(analysisResult.sentiment?.score)}</strong></span>
-                  <SentimentBadge label={analysisResult.sentiment?.label} />
-                </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-2">
+                <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-stone-500">What FinSight thinks</span>
+                <SentimentBadge label={analysisResult.sentiment?.label} />
               </div>
-              <p className="font-serif font-bold text-base text-stone-900">{analysisResult.title}</p>
-              {analysisResult.summary && (
-                <p className="text-xs text-stone-700 leading-relaxed font-serif bg-stone-50 p-2.5 border border-stone-200">
-                  <strong className="text-stone-900">Summary: </strong>{analysisResult.summary}
+              <section aria-label="A simple takeaway" className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                <h4 className="text-xs font-bold text-stone-900">A simple takeaway</h4>
+                <p className="mt-1 text-sm leading-relaxed text-stone-800">{plainLanguageConclusion(analysisResult)}</p>
+              </section>
+              {analysisResult.summary && analysisResult.summary.trim() !== analysisResult.title?.trim() && (
+                <p className="border border-stone-200 bg-stone-50 p-2.5 text-xs leading-relaxed text-stone-700">
+                  <strong className="text-stone-900">Short version: </strong>{analysisResult.summary}
                 </p>
               )}
               {analysisResult.explanation?.signals?.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-bold text-[10px] uppercase tracking-wider text-stone-500">Key signals identified: </span>
+                  <span className="font-bold text-[10px] uppercase tracking-wider text-stone-600">Words FinSight noticed</span>
                   <div className="mt-1 flex flex-wrap gap-1.5 font-sans">
                     {analysisResult.explanation.signals.map((s, i) => (
                       <span
@@ -144,16 +165,26 @@ function CustomAnalyzer({ defaultSymbol = "" }) {
                         className={`chip text-[10px] font-bold ${
                           s.polarity === "positive"
                             ? "!border-emerald-700 !bg-emerald-50 !text-emerald-900"
-                            : "!border-rose-700 !bg-rose-50 !text-rose-900"
+                            : s.polarity === "negative"
+                              ? "!border-rose-700 !bg-rose-50 !text-rose-900"
+                              : "!border-stone-400 !bg-stone-100 !text-stone-800"
                         }`}
                       >
-                        {s.term} {s.delta !== undefined && `(${signed(s.delta)})`}
+                        “{s.term}” · {s.polarity === "positive" ? "positive wording" : s.polarity === "negative" ? "negative wording" : "neutral wording"}
                       </span>
                     ))}
                   </div>
+                  <p className="mt-2 leading-relaxed text-stone-600">
+                    These are clues FinSight noticed in the wording, not proof that the events happened.
+                  </p>
                 </div>
               )}
-              <EntityTags entities={analysisResult.entities} />
+              {analysisResult.entities && (
+                <div className="border-t border-stone-200 pt-3">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-600">Names and details found in the text</p>
+                  <EntityTags entities={analysisResult.entities} />
+                </div>
+              )}
             </div>
           )}
         </div>

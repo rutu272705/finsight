@@ -6,11 +6,43 @@ const KIND = {
   topic: "border border-stone-300 bg-white text-stone-800 font-serif text-[11px]",
 };
 
+const TOPIC_LABELS = {
+  Earnings: "Company results",
+  Revenue: "Sales and money earned",
+  Profit: "Profit",
+  Losses: "Losses",
+  "Mergers & Acquisitions": "Company mergers or purchases",
+  "Dividends & Buybacks": "Payments to shareholders",
+  Inflation: "Rising prices",
+  "Interest Rates": "Interest rates",
+  Regulation: "Rules or legal issues",
+  "Analyst Ratings": "Analyst opinions",
+  "Guidance & Outlook": "Company outlook",
+  "Layoffs & Hiring": "Jobs and hiring",
+  "IPO & Funding": "Funding or going public",
+  "Supply Chain": "Making and shipping products",
+  "Product & Innovation": "Products and new ideas",
+  "Market Movement": "Stock-price movement",
+};
+
+const FIGURE_LABELS = {
+  revenue: "sales or money earned",
+  profit: "profit",
+  loss: "loss",
+  "deal value": "deal value",
+  dividend: "shareholder payment",
+  guidance: "company outlook",
+  "market cap": "company value",
+  "share price": "stock price",
+  funding: "funding",
+  debt: "borrowed money",
+};
+
 function Group({ label, children }) {
   if (!children || children.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="w-20 shrink-0 text-[10px] font-bold uppercase tracking-wider text-stone-500 font-sans">{label}</span>
+      <span className="w-32 shrink-0 text-[10px] font-bold uppercase tracking-wider text-stone-500 font-sans">{label}</span>
       <div className="flex flex-wrap items-center gap-1.5">{children}</div>
     </div>
   );
@@ -27,20 +59,20 @@ export default function EntityTags({ entities }) {
     !entities.tickers?.length &&
     !figures.length &&
     !entities.topics?.length;
-  if (nothing) return <p className="text-xs text-stone-400 font-serif italic">No entities were recognised in this article.</p>;
+  if (nothing) return <p className="text-xs text-stone-500 font-serif italic">No names, numbers, or common financial topics stood out in the text.</p>;
   return (
     <div className="space-y-2">
-      <Group label="Companies">{entities.companies?.map((c) => <Tag key={c} kind="company">{c}</Tag>)}</Group>
-      <Group label="People">{entities.people?.map((c) => <Tag key={c} kind="person">{c}</Tag>)}</Group>
-      <Group label="Tickers">{entities.tickers?.map((c) => <Tag key={c} kind="ticker">{c}</Tag>)}</Group>
-      <Group label="Figures">
+      <Group label="Company names">{entities.companies?.map((c) => <Tag key={c} kind="company">{c}</Tag>)}</Group>
+      <Group label="People's names">{entities.people?.map((c) => <Tag key={c} kind="person">{c}</Tag>)}</Group>
+      <Group label="Stock codes">{entities.tickers?.map((c) => <Tag key={c} kind="ticker">{c}</Tag>)}</Group>
+      <Group label="Numbers found">
         {figures.map((f, i) => (
           <Tag key={i} kind="figure">
-            {f.text}<span className="text-amber-800"> · {f.context || "unlabelled"}</span>
+            {f.text}<span className="text-amber-800"> · {FIGURE_LABELS[f.context] || f.context || "number"}</span>
           </Tag>
         ))}
       </Group>
-      <Group label="Topics">{entities.topics?.map((c) => <Tag key={c} kind="topic">{c}</Tag>)}</Group>
+      <Group label="Topics mentioned">{entities.topics?.map((c) => <Tag key={c} kind="topic">{TOPIC_LABELS[c] || c}</Tag>)}</Group>
     </div>
   );
 }

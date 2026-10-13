@@ -12,12 +12,13 @@ import PredictionCard from "../components/PredictionCard.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import BroadsheetHeader from "../components/BroadsheetHeader.jsx";
 import Sidebar from "../components/Sidebar.jsx";
+import { SentimentSummary } from "../components/SentimentPanels.jsx";
 import { article, dashboard } from "./fixtures.js";
 
 vi.mock("../api.js", async (orig) => {
   const actual = await orig();
   const fn = () => vi.fn();
-  return { ...actual, api: { health: fn(), search: fn(), stock: fn(), dashboard: fn(), news: fn(), watchlist: fn(), history: fn(), addWatch: fn(), removeWatch: fn(), clearHistory: fn(), prediction: fn(), analytics: fn(), exportUrl: (s, t) => `/api/export/${s}?type=${t}` } };
+  return { ...actual, api: { health: fn(), search: fn(), stock: fn(), dashboard: fn(), news: fn(), analyze: fn(), watchlist: fn(), history: fn(), addWatch: fn(), removeWatch: fn(), clearHistory: fn(), prediction: fn(), analytics: fn(), exportUrl: (s, t) => `/api/export/${s}?type=${t}` } };
 });
 
 const at = (path, ui, route = "/stock/:symbol") =>
@@ -173,9 +174,65 @@ describe("News page", () => {
     at("/news", <News />, "/news");
     expect(screen.getByText(/pick a company first/i)).toBeInTheDocument();
   });
+
+  it("explains custom text analysis in plain language", async () => {
+    api.analyze.mockReturnValue(ok({
+      articles: [{
+        title: "Acme sold fewer phones this year, but says sales may improve soon.",
+        sentiment: { label: "positive", score: 0.94 },
+        summary: "Acme sold fewer phones this year, but says sales may improve soon.",
+        explanation: {
+          signals: [
+            { term: "improve", polarity: "positive", delta: 0.25 },
+            { term: "sold", polarity: "negative", delta: 0 },
+          ],
+        },
+        entities: { topics: ["Revenue"] },
+      }],
+    }));
+    at("/news", <News />, "/news");
+    await userEvent.click(screen.getByRole("button", { name: /open analyzer/i }));
+    await userEvent.type(
+      screen.getByLabelText(/headline or corporate statement/i),
+      "Acme sold fewer phones this year, but says sales may improve soon.",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /analyze with finsight nlp/i }));
+
+    const takeaway = await screen.findByLabelText("A simple takeaway");
+    expect(takeaway).toHaveTextContent(/The wording is mixed/i);
+    expect(takeaway).toHaveTextContent(/“improve” sounds positive, while “sold” sounds negative/i);
+    expect(takeaway).toHaveTextContent(/labels the overall tone positive/i);
+    expect(takeaway).toHaveTextContent(/positive wording does not erase the negative part/i);
+    expect(takeaway).toHaveTextContent(/Read the full report before drawing a conclusion/i);
+    expect(screen.getByText(/“improve” · positive wording/i)).toBeInTheDocument();
+    expect(screen.getByText(/“sold” · negative wording/i)).toBeInTheDocument();
+    expect(screen.getByText("Sales and money earned")).toBeInTheDocument();
+    expect(screen.queryByText(/score: \+0\.94/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/summary:/i)).not.toBeInTheDocument();
+  });
 });
 
 describe("Components", () => {
+  it("explains the overall news tone and weighted story count in plain language", async () => {
+    render(<SentimentSummary aggregate={{
+      score: -0.14,
+      label: "neutral",
+      n_articles: 91,
+      effective_sample_size: 7.1,
+      low_sample: false,
+      methodology: "Weighted mean by relevance and recency.",
+    }} />);
+
+    expect(screen.getByText("Overall tone of the news")).toBeInTheDocument();
+    expect(screen.getByText("mostly neutral")).toBeInTheDocument();
+    expect(screen.getByText(/not whether a share price will rise or fall/i)).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element.tagName === "P" && /Based on 91 stories/.test(element.textContent))).toHaveTextContent(/roughly like comparing 7\.1 equally weighted stories/i);
+    expect(screen.getByRole("img", { name: /news tone scale from negative to positive/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("How is this worked out?"));
+    expect(screen.getByText(/newer stories and stories more clearly about this company count more/i)).toBeInTheDocument();
+  });
+
   it("keeps Home and Dashboard navigation distinct", async () => {
     const home = render(<MemoryRouter initialEntries={["/"]}><BroadsheetHeader symbol="AAPL" onSelect={() => {}} /></MemoryRouter>);
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
@@ -217,7 +274,7 @@ describe("Components", () => {
     await userEvent.click(screen.getByRole("button", { name: /why this label/i }));
     expect(screen.getByText("beats")).toBeInTheDocument();
     expect(screen.getByText(/associative, not causal/i)).toBeInTheDocument();
-    expect(screen.getByText(/revenue/)).toBeInTheDocument();
+    expect(screen.getByText("Company results")).toBeInTheDocument();
   });
 
   it("shows aspect sentiment, extracted events, dates and grouped coverage", async () => {
